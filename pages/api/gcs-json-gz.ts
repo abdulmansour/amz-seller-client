@@ -1,7 +1,7 @@
 import { Storage } from "@google-cloud/storage";
 import { cwd } from "process";
 import path from "path";
-import { NextApiRequest, NextApiResponse } from "next/types";
+import { NextApiRequest, NextApiResponse } from "next";
 
 import { chain } from "stream-chain";
 import { parser } from "stream-json";
@@ -26,7 +26,7 @@ const downloadFile = async (
 };
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  const fileName = "orders_14d.json.gz";
+  const fileName = req?.query?.fileName as string;
   const storage = new Storage({
     keyFilename: "utils/service_account_gcs.json",
   });

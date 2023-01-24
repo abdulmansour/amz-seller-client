@@ -15,10 +15,12 @@ import {
   InfoWindowOrderTotal,
   InfoWindowRow,
   InfoWindowValue,
+  MapOrdersContainer,
 } from "./styled";
 import Link from "next/link";
 import { useOrders } from "../../hooks/orders";
 import { CustomOrder } from "../../pages";
+import dateFormat from "dateformat";
 
 const containerStyle = {
   width: "100%",
@@ -92,113 +94,126 @@ const MapOrders = ({ orders }: MapOrdersProps) => {
     ).toFixed(2);
   };
 
+  const getDateToString = (str: string) => {
+    const date = new Date(str);
+    return dateFormat(date, "dddd, mmmm dS, yyyy, h:MM:ss TT");
+  };
+
   return isLoaded && orders ? (
-    <GoogleMap
-      onLoad={onLoad}
-      onUnmount={onUnmount}
-      mapContainerStyle={containerStyle}
-      center={center}
-      zoom={zoom}
-      onZoomChanged={() => {
-        const _zoom = map?.getZoom();
-        if (_zoom !== zoom && _zoom) setZoom(_zoom);
-      }}
-    >
-      {orders?.map((order) => {
-        if (
-          order?.ShippingAddressGeoLocation?.latitude &&
-          order?.ShippingAddressGeoLocation?.longitude
-        )
-          return (
-            <Marker
-              onClick={(e) => {
-                const _lat = e.latLng?.lat();
-                const _lng = e.latLng?.lng();
+    <MapOrdersContainer>
+      <GoogleMap
+        onLoad={onLoad}
+        onUnmount={onUnmount}
+        mapContainerStyle={containerStyle}
+        center={center}
+        zoom={zoom}
+        onZoomChanged={() => {
+          const _zoom = map?.getZoom();
+          if (_zoom !== zoom && _zoom) setZoom(_zoom);
+        }}
+      >
+        {orders?.map((order) => {
+          if (
+            order?.ShippingAddressGeoLocation?.latitude &&
+            order?.ShippingAddressGeoLocation?.longitude
+          )
+            return (
+              <Marker
+                onClick={(e) => {
+                  const _lat = e.latLng?.lat();
+                  const _lng = e.latLng?.lng();
 
-                setCenter({
-                  lat: _lat ? _lat : defaultLatLng.lat,
-                  lng: _lng ? _lng : defaultLatLng.lng,
-                });
+                  setCenter({
+                    lat: _lat ? _lat : defaultLatLng.lat,
+                    lng: _lng ? _lng : defaultLatLng.lng,
+                  });
 
-                setZoom(8);
-                console.log(order);
-              }}
-              onMouseOver={() => handleMouseOver(order)}
-              onMouseOut={() => null}
-              key={order.AmazonOrderId}
-              position={{
-                lat: order?.ShippingAddressGeoLocation?.latitude,
-                lng: order?.ShippingAddressGeoLocation?.longitude,
-              }}
-            >
-              {selectedOrder?.AmazonOrderId === order.AmazonOrderId && (
-                <InfoWindow
-                  options={{ maxWidth: 400 }}
-                  position={{
-                    lat: order?.ShippingAddressGeoLocation?.latitude,
-                    lng: order?.ShippingAddressGeoLocation?.longitude,
-                  }}
-                  onCloseClick={() => handleInfoWindoCloseClick()}
-                >
-                  <InfoWindowContainer>
-                    <InfoWindowHeader>
-                      <Link href={`/orders/${order.AmazonOrderId}`}>
-                        {order.AmazonOrderId}
-                      </Link>
-                    </InfoWindowHeader>
+                  setZoom(8);
+                  console.log(order);
+                }}
+                onMouseOver={() => handleMouseOver(order)}
+                onMouseOut={() => null}
+                key={order.AmazonOrderId}
+                position={{
+                  lat: order?.ShippingAddressGeoLocation?.latitude,
+                  lng: order?.ShippingAddressGeoLocation?.longitude,
+                }}
+              >
+                {selectedOrder?.AmazonOrderId === order.AmazonOrderId && (
+                  <InfoWindow
+                    options={{ maxWidth: 400 }}
+                    position={{
+                      lat: order?.ShippingAddressGeoLocation?.latitude,
+                      lng: order?.ShippingAddressGeoLocation?.longitude,
+                    }}
+                    onCloseClick={() => handleInfoWindoCloseClick()}
+                  >
+                    <InfoWindowContainer>
+                      <InfoWindowHeader>
+                        <Link href={`/orders/${order.AmazonOrderId}`}>
+                          {order.AmazonOrderId}
+                        </Link>
+                      </InfoWindowHeader>
 
-                    <InfoWindoOrderItems>
-                      {order?.OrderItems?.map((item) => {
-                        return (
-                          <InfoWindoOrderItem key={item.OrderItemId}>
-                            <InfoWindowRow>
-                              <InfoWindowLabel>Title</InfoWindowLabel>
-                              <InfoWindowValue>{item.Title}</InfoWindowValue>
-                            </InfoWindowRow>
-                            <InfoWindowRow>
-                              <InfoWindowLabel>SKU</InfoWindowLabel>
-                              <InfoWindowValue>
-                                {item.SellerSKU}
-                              </InfoWindowValue>
-                            </InfoWindowRow>
-                            <InfoWindowRow>
-                              <InfoWindowLabel>
-                                Quantity Ordered
-                              </InfoWindowLabel>
-                              <InfoWindowValue>
-                                {item.QuantityOrdered}
-                              </InfoWindowValue>
-                            </InfoWindowRow>
-                            <InfoWindowRow>
-                              <InfoWindowLabel>Item Price</InfoWindowLabel>
-                              <InfoWindowValue>
-                                {getTotalItemPrice(
-                                  item.ItemPrice?.Amount,
-                                  item.ItemTax?.Amount,
-                                  item?.ShippingPrice?.Amount,
-                                  item?.ShippingDiscount?.Amount,
-                                  item.PromotionDiscount?.Amount,
-                                  item?.BuyerInfo?.GiftWrapPrice?.Amount,
-                                  item?.BuyerInfo?.GiftWrapTax?.Amount
-                                )}{" "}
-                                {item.ItemPrice?.CurrencyCode}
-                              </InfoWindowValue>
-                            </InfoWindowRow>
-                          </InfoWindoOrderItem>
-                        );
-                      })}
-                    </InfoWindoOrderItems>
-                    <InfoWindowOrderTotal>
-                      {order.OrderTotal?.Amount}{" "}
-                      {order.OrderTotal?.CurrencyCode}
-                    </InfoWindowOrderTotal>
-                  </InfoWindowContainer>
-                </InfoWindow>
-              )}
-            </Marker>
-          );
-      })}
-    </GoogleMap>
+                      <InfoWindoOrderItems>
+                        {order?.OrderItems?.map((item) => {
+                          return (
+                            <InfoWindoOrderItem key={item.OrderItemId}>
+                              <InfoWindowRow>
+                                <InfoWindowLabel>Purchase Date</InfoWindowLabel>
+                                <InfoWindowValue>
+                                  {getDateToString(order.PurchaseDate)}
+                                </InfoWindowValue>
+                              </InfoWindowRow>
+                              <InfoWindowRow>
+                                <InfoWindowLabel>Title</InfoWindowLabel>
+                                <InfoWindowValue>{item.Title}</InfoWindowValue>
+                              </InfoWindowRow>
+                              <InfoWindowRow>
+                                <InfoWindowLabel>SKU</InfoWindowLabel>
+                                <InfoWindowValue>
+                                  {item.SellerSKU}
+                                </InfoWindowValue>
+                              </InfoWindowRow>
+                              <InfoWindowRow>
+                                <InfoWindowLabel>
+                                  Quantity Ordered
+                                </InfoWindowLabel>
+                                <InfoWindowValue>
+                                  {item.QuantityOrdered}
+                                </InfoWindowValue>
+                              </InfoWindowRow>
+                              <InfoWindowRow>
+                                <InfoWindowLabel>Item Price</InfoWindowLabel>
+                                <InfoWindowValue>
+                                  {getTotalItemPrice(
+                                    item.ItemPrice?.Amount,
+                                    item.ItemTax?.Amount,
+                                    item?.ShippingPrice?.Amount,
+                                    item?.ShippingDiscount?.Amount,
+                                    item.PromotionDiscount?.Amount,
+                                    item?.BuyerInfo?.GiftWrapPrice?.Amount,
+                                    item?.BuyerInfo?.GiftWrapTax?.Amount
+                                  )}{" "}
+                                  {item.ItemPrice?.CurrencyCode}
+                                </InfoWindowValue>
+                              </InfoWindowRow>
+                            </InfoWindoOrderItem>
+                          );
+                        })}
+                      </InfoWindoOrderItems>
+                      <InfoWindowOrderTotal>
+                        {order.OrderTotal?.Amount}{" "}
+                        {order.OrderTotal?.CurrencyCode}
+                      </InfoWindowOrderTotal>
+                    </InfoWindowContainer>
+                  </InfoWindow>
+                )}
+              </Marker>
+            );
+        })}
+      </GoogleMap>
+    </MapOrdersContainer>
   ) : (
     <></>
   );

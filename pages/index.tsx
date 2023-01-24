@@ -44,6 +44,7 @@ const HomePage = () => {
         startDate={pickerStartDate}
         endDate={pickerEndDate}
         onChange={(update) => {
+          if (update[1]) update[1].setUTCHours(23, 59, 59, 999);
           setPickerDateRange(update);
         }}
         onCalendarClose={() => {

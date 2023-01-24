@@ -1,5 +1,9 @@
 import styled from "styled-components";
 
+export const MapOrdersContainer = styled.div`
+  display: flex;
+`;
+
 export const InfoWindowContainer = styled.div`
   display: flex;
   flex-direction: column;
