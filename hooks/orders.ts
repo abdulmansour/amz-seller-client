@@ -1,3 +1,4 @@
+import moment from "moment";
 import { useEffect, useState } from "react";
 import { CustomOrder } from "../pages";
 
@@ -44,6 +45,29 @@ const ceilToWeek = (date: Date) => {
   return new Date(date.getTime() + secondsUntilEndofWeek * 1000);
 };
 
+const getFilenameByMoment = (time: moment.Moment, monthSub: number = 0) => {
+  if (monthSub !== 0) time.subtract(monthSub, "month");
+  return `orders_${time.format("YYYY-MM")}.json.gz`;
+};
+
+const getFiles = (sDate: moment.Moment, eDate: moment.Moment) => {
+  const result = [];
+
+  console.log(sDate);
+  console.log(eDate);
+
+  if (eDate.isAfter(moment())) {
+    eDate = moment();
+  }
+
+  while (sDate.isBefore(eDate)) {
+    result.push(getFilenameByMoment(sDate));
+    sDate.add(1, "month");
+  }
+  if (eDate.month() > sDate.month()) result.push(getFilenameByMoment(sDate));
+  return result;
+};
+
 export const useOrders = ({ startDate, endDate }: UseOrderProps) => {
   const [orders, setOrders] = useState<CustomOrder[]>();
 
@@ -51,20 +75,27 @@ export const useOrders = ({ startDate, endDate }: UseOrderProps) => {
     startDate: Date | null | undefined,
     endDate: Date | null | undefined
   ) => {
-    const orders1000d: Record<string, CustomOrder> = await fetch(
-      "/api/gcs-json-gz?fileName=orders_1000d.json.gz"
-    ).then((res) => res.json());
+    var orders = {};
 
+    if (startDate && endDate) {
+      const files = getFiles(moment(startDate), moment(endDate));
+
+      await Promise.all(
+        files.map((file) => fetch(`/api/gcs-json-gz?fileName=${file}`))
+      )
+        .then((responses) => Promise.all(responses.map((res) => res.json())))
+        .then((_ordersList: Record<string, CustomOrder>[]) => {
+          _ordersList.forEach((_orders) => {
+            orders = { ...orders, ..._orders };
+          });
+        });
+    }
     const orders21d: Record<string, CustomOrder> = await fetch(
       "/api/gcs-json-gz?fileName=orders_21d.json.gz"
     ).then((res) => res.json());
 
-    // const orders21d: Record<string, CustomOrder> = await fetch(
-    //   `/api/firestore-orders`
-    // ).then((res) => res.json());
-
     const ordersObj: Record<string, CustomOrder> = {
-      ...orders1000d,
+      ...orders,
       ...orders21d,
     };
 
@@ -107,26 +138,30 @@ export const useOrders = ({ startDate, endDate }: UseOrderProps) => {
     }
   };
 
+  const invalidateCaches = async () => {
+    await invalidateCache(
+      getFilenameByMoment(moment()),
+      CeilTo.WEEK,
+      "gcs-json-gz",
+      `/api/gcs-json-gz?fileName=${getFilenameByMoment(moment())}`
+    );
+    await invalidateCache(
+      getFilenameByMoment(moment(), 1),
+      CeilTo.WEEK,
+      "gcs-json-gz",
+      `/api/gcs-json-gz?fileName=${getFilenameByMoment(moment(), 1)}`
+    );
+    await invalidateCache(
+      "orders_21d.json.gz",
+      CeilTo.HOUR,
+      "gcs-json-gz",
+      "/api/gcs-json-gz?fileName=orders_21d.json.gz"
+    );
+  };
+
   useEffect(() => {
     const getOrders = async () => {
-      await invalidateCache(
-        "orders1000dExpiry",
-        CeilTo.WEEK,
-        "gcs-json-gz",
-        "/api/gcs-json-gz?fileName=orders_1000d.json.gz"
-      );
-      await invalidateCache(
-        "orders21dExpiry",
-        CeilTo.HOUR,
-        "gcs-json-gz",
-        "/api/gcs-json-gz?fileName=orders_21d.json.gz"
-      );
-      // await invalidateCache(
-      //   "orders21dExpiry",
-      //   CeilTo.HOUR,
-      //   "firestore-orders",
-      //   "/api/firestore-orders"
-      // );
+      await invalidateCaches();
       await fetchOrders(startDate, endDate);
     };
 

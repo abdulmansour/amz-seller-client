@@ -45,32 +45,4 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   res.status(200).send(file);
 };
 
-const handlerStream = async (req: NextApiRequest, res: NextApiResponse) => {
-  const fileName = "orders_14d.json.gz";
-  const storage = new Storage({
-    keyFilename: "utils/service_account_gcs.json",
-  });
-
-  await downloadFile(
-    storage,
-    "molgha",
-    fileName,
-    path.join(cwd(), fileName)
-  ).catch(console.error);
-
-  const pipeline = chain([
-    fs.createReadStream(fileName),
-    zlib.createGunzip(),
-    parser(),
-    streamObject(),
-  ]);
-
-  pipeline.on("data", (chunk) => {
-    let v = JSON.stringify(chunk) + "\n";
-    console.log(v);
-    return res.write(v);
-  });
-  pipeline.on("end", () => res.end());
-};
-
 export default handler;
