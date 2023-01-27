@@ -6,6 +6,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useState } from "react";
 import { useOrders } from "../hooks/orders";
+import { LoadingSpinner } from "../components/LoadingSpinner";
+import { FiltersContainer } from "../styles/HomePage/styled";
 
 export interface CustomOrder extends Order {
   ShippingAddressGeoLocation?: {
@@ -34,24 +36,29 @@ const HomePage = () => {
   ]);
   const [pickerStartDate, pickerEndDate] = pickerDateRange;
   const [startDate, endDate] = dateRange;
-  const { orders } = useOrders({ startDate, endDate });
+  const { orders, isLoading } = useOrders({ startDate, endDate });
 
   return (
     <HomePageContainer>
       <Navbar />
-      <DatePicker
-        selectsRange={true}
-        startDate={pickerStartDate}
-        endDate={pickerEndDate}
-        onChange={(update) => {
-          if (update[1]) update[1].setUTCHours(23, 59, 59, 999);
-          setPickerDateRange(update);
-        }}
-        onCalendarClose={() => {
-          setDateRange(pickerDateRange);
-        }}
-      />
+      <FiltersContainer>
+        <DatePicker
+          dateFormat="P"
+          selectsRange={true}
+          startDate={pickerStartDate}
+          endDate={pickerEndDate}
+          onChange={(update) => {
+            if (update[1]) update[1].setUTCHours(23, 59, 59, 999);
+            setPickerDateRange(update);
+          }}
+          onCalendarClose={() => {
+            setDateRange(pickerDateRange);
+          }}
+        />
+      </FiltersContainer>
+
       <MapOrders orders={orders} />
+      <LoadingSpinner loading={isLoading} />
     </HomePageContainer>
   );
 };

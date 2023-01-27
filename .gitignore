@@ -38,3 +38,7 @@ next-env.d.ts
 
 service_account*.json
 *.json.gz
+
+sw*
+workbox-*
+worker-*

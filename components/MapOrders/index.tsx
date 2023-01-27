@@ -5,7 +5,6 @@ import {
   Marker,
   useJsApiLoader,
 } from "@react-google-maps/api";
-import { Order, OrderItem } from "@sp-api-sdk/orders-api-v0";
 import {
   InfoWindoOrderItem,
   InfoWindoOrderItems,
@@ -18,13 +17,13 @@ import {
   MapOrdersContainer,
 } from "./styled";
 import Link from "next/link";
-import { useOrders } from "../../hooks/orders";
 import { CustomOrder } from "../../pages";
 import dateFormat from "dateformat";
+import { OrdersList } from "../OrdersList";
 
 const containerStyle = {
-  width: "100%",
-  height: "650px",
+  width: "80vw",
+  height: "60vh",
 };
 
 const defaultLatLng = {
@@ -47,7 +46,6 @@ const MapOrders = ({ orders }: MapOrdersProps) => {
   });
 
   const [center, setCenter] = useState(defaultLatLng);
-  const [zoom, setZoom] = useState(defaultZoom);
   const [selectedOrder, setSelectedOrder] = useState<CustomOrder | undefined>(
     undefined
   );
@@ -99,17 +97,33 @@ const MapOrders = ({ orders }: MapOrdersProps) => {
     return dateFormat(date, "dddd, mmmm dS, yyyy, h:MM:ss TT");
   };
 
-  return isLoaded && orders ? (
+  const handleMarkerClick = (order: CustomOrder) => {
+    const _lat = order.ShippingAddressGeoLocation?.latitude;
+    const _lng = order.ShippingAddressGeoLocation?.longitude;
+    if (_lat && _lng) {
+      setCenter({
+        lat: _lat,
+        lng: _lng,
+      });
+
+      map?.setZoom(8);
+      console.log(order);
+    }
+  };
+
+  return isLoaded ? (
     <MapOrdersContainer>
       <GoogleMap
         onLoad={onLoad}
         onUnmount={onUnmount}
         mapContainerStyle={containerStyle}
         center={center}
-        zoom={zoom}
+        zoom={defaultZoom}
         onZoomChanged={() => {
           const _zoom = map?.getZoom();
-          if (_zoom !== zoom && _zoom) setZoom(_zoom);
+          if (_zoom && _zoom < defaultZoom) {
+            map?.setZoom(defaultZoom);
+          }
         }}
       >
         {orders?.map((order) => {
@@ -119,18 +133,7 @@ const MapOrders = ({ orders }: MapOrdersProps) => {
           )
             return (
               <Marker
-                onClick={(e) => {
-                  const _lat = e.latLng?.lat();
-                  const _lng = e.latLng?.lng();
-
-                  setCenter({
-                    lat: _lat ? _lat : defaultLatLng.lat,
-                    lng: _lng ? _lng : defaultLatLng.lng,
-                  });
-
-                  setZoom(8);
-                  console.log(order);
-                }}
+                onClick={() => handleMarkerClick(order)}
                 onMouseOver={() => handleMouseOver(order)}
                 onMouseOut={() => null}
                 key={order.AmazonOrderId}
@@ -213,6 +216,12 @@ const MapOrders = ({ orders }: MapOrdersProps) => {
             );
         })}
       </GoogleMap>
+      <OrdersList
+        orders={orders}
+        handleMouseOver={handleMouseOver}
+        handleOnClick={handleMarkerClick}
+        selectedOrder={selectedOrder}
+      />
     </MapOrdersContainer>
   ) : (
     <></>

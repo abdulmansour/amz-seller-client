@@ -2,12 +2,7 @@ import { Storage } from "@google-cloud/storage";
 import { cwd } from "process";
 import path from "path";
 import { NextApiRequest, NextApiResponse } from "next";
-
-import { chain } from "stream-chain";
-import { parser } from "stream-json";
-import { streamObject } from "stream-json/streamers/StreamObject";
 import fs from "fs";
-import zlib from "zlib";
 
 const downloadFile = async (
   storage: Storage,
@@ -39,6 +34,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   ).catch(console.error);
 
   const file = fs.readFileSync(fileName);
+  fs.unlink(path.join(cwd(), fileName), () => null);
 
   res.setHeader("Content-Encoding", "gzip");
   res.setHeader("Content-Type", " application/json");

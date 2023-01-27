@@ -6,10 +6,7 @@ export interface INavbarItem {
 }
 
 const Navbar = () => {
-  const navbarItems: INavbarItem[] = [
-    { label: "MapView", onClick: () => null },
-    { label: "Orders", onClick: () => null },
-  ];
+  const navbarItems: INavbarItem[] = [{ label: "Map", onClick: () => null }];
   return (
     <NavbarContainer>
       {navbarItems.map((item, i) => {

@@ -1,7 +1,12 @@
 import styled from "styled-components";
 
+export const OrdersContainer = styled.div`
+  display: flex;
+`;
+
 export const MapOrdersContainer = styled.div`
   display: flex;
+  flex-direction: row;
 `;
 
 export const InfoWindowContainer = styled.div`
