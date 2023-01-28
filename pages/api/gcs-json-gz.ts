@@ -15,30 +15,36 @@ const downloadFile = async (
   };
 
   // Downloads the file
-  await storage.bucket(bucketName).file(fileName).download(options);
-
-  console.log(`gs://${bucketName}/${fileName} downloaded to ${destFileName}.`);
+  const doesExist = await storage.bucket(bucketName).file(fileName).exists();
+  if (doesExist) {
+    await storage.bucket(bucketName).file(fileName).download(options);
+    console.log(
+      `gs://${bucketName}/${fileName} downloaded to ${destFileName}.`
+    );
+  } else {
+    throw new Error(`gs://${bucketName}/${fileName} does not exist`);
+  }
 };
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+  const bucketName = "molgha";
   const fileName = req?.query?.fileName as string;
   const storage = new Storage({
     keyFilename: "utils/service_account_gcs.json",
   });
 
-  await downloadFile(
-    storage,
-    "molgha",
-    fileName,
-    path.join(cwd(), fileName)
-  ).catch(console.error);
+  await downloadFile(storage, bucketName, fileName, path.join(cwd(), fileName))
+    .then(() => {
+      const file = fs.readFileSync(fileName);
+      fs.unlink(path.join(cwd(), fileName), () => null);
 
-  const file = fs.readFileSync(fileName);
-  fs.unlink(path.join(cwd(), fileName), () => null);
-
-  res.setHeader("Content-Encoding", "gzip");
-  res.setHeader("Content-Type", " application/json");
-  res.status(200).send(file);
+      res.setHeader("Content-Encoding", "gzip");
+      res.setHeader("Content-Type", " application/json");
+      res.status(200).send(file);
+    })
+    .catch((e: Error) => {
+      res.send({});
+    });
 };
 
 export default handler;

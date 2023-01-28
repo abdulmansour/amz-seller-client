@@ -29,7 +29,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const db = getFirestore();
 
   const fromDate = goBack21Days(setToSunday(new Date())).toLocaleString();
-  console.log(fromDate);
 
   const snapshot = await db
     .collection("orders")

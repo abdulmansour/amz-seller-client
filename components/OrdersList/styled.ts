@@ -1,6 +1,7 @@
-import styled from "styled-components";
+import { Box } from "@mui/material";
+import { styled } from "@mui/material/styles";
 
-export const OrdersListContainer = styled.div`
+export const OrdersListContainer = styled(Box)`
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -12,9 +13,9 @@ export const OrdersListContainer = styled.div`
   padding: 5px;
 `;
 
-export const OrdersListHeader = styled.div``;
+export const OrdersListHeader = styled(Box)``;
 
-export const OrdersItemsContainer = styled.div`
+export const OrdersItemsContainer = styled(Box)`
   display: flex;
   flex-direction: column;
   overflow: auto;
@@ -26,7 +27,7 @@ export interface OrderItemContainerProps {
   isSelected: boolean;
 }
 
-export const OrderItemContainer = styled.div<OrderItemContainerProps>`
+export const OrderItemContainer = styled(Box)<OrderItemContainerProps>`
   display: flex;
   flex-direction: column;
   padding: 5px;
@@ -42,15 +43,15 @@ export const OrderItemContainer = styled.div<OrderItemContainerProps>`
   }
 `;
 
-export const OrderItemHeaderContainer = styled.div``;
+export const OrderItemHeaderContainer = styled(Box)``;
 
-export const OrderItemHeader = styled.div``;
-export const OrderItemSubHeader = styled.div`
+export const OrderItemHeader = styled(Box)``;
+export const OrderItemSubHeader = styled(Box)`
   font-size: 12px;
   color: #797c80;
 `;
 
-export const OrdersListEmptyMessage = styled.div`
+export const OrdersListEmptyMessage = styled(Box)`
   display: flex;
   justify-content: center;
   align-items: center;

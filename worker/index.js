@@ -2,13 +2,15 @@ import { ExpirationPlugin } from "workbox-expiration";
 import { CacheFirst } from "workbox-strategies";
 import { registerRoute } from "workbox-routing";
 
+self.__WB_DISABLE_DEV_LOGS = true;
+
 registerRoute(
   /\/api\/gcs-json-gz.*$/i,
   new CacheFirst({
     cacheName: "gcs-json-gz",
     plugins: [
       new ExpirationPlugin({
-        maxEntries: 10,
+        maxEntries: 1000,
       }),
     ],
   }),

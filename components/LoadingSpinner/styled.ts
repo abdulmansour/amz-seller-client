@@ -1,9 +1,10 @@
-import styled from "styled-components";
+import { styled } from "@mui/material/styles";
+import { Box } from "@mui/material";
 
 export interface LoadingSpinnerModalProps {
   loading: boolean;
 }
-export const LoadingSpinnerModal = styled.div<LoadingSpinnerModalProps>`
+export const LoadingSpinnerModal = styled(Box)<LoadingSpinnerModalProps>`
   display: ${(props) => (props.loading ? "flex" : "none")};
   justify-content: center;
   align-items: center;

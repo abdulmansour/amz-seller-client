@@ -22,7 +22,7 @@ import dateFormat from "dateformat";
 import { OrdersList } from "../OrdersList";
 
 const containerStyle = {
-  width: "80vw",
+  width: "60vw",
   height: "60vh",
 };
 
