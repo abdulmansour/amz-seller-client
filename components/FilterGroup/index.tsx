@@ -1,18 +1,23 @@
 import { ChangeEvent, useEffect, useState } from "react";
-import Box from "@mui/material/Box";
 import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import FormHelperText from "@mui/material/FormHelperText";
 import Checkbox from "@mui/material/Checkbox";
 import { FilterLabels } from "../../pages";
+import { Typography } from "@mui/material";
+import {
+  FilterGroupContainer,
+  FilterOption,
+  FilterOptionCount,
+  FilterOptionLabel,
+} from "./styled";
 
 export interface FilterOption {
   label: string;
   value: string;
   selected?: boolean;
-  count?: number;
+  count: number;
 }
 
 export interface FilterGroupProps {
@@ -48,12 +53,11 @@ export default function FilterGroup({
   }, [filterOptions]);
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <FilterGroupContainer>
       <FormControl
         sx={{
           m: 3,
-
-          width: "15vw",
+          width: "14vw",
           margin: "0px",
         }}
       >
@@ -63,24 +67,37 @@ export default function FilterGroup({
             sx={{ maxHeight: "100vh", overflowY: "auto", flexWrap: "nowrap" }}
             onChange={(event) => console.log(event)}
           >
-            {Object.values(options).map(({ label, value, selected, count }) => {
-              return (
-                <FormControlLabel
-                  key={value}
-                  control={
-                    <Checkbox
-                      onChange={handleChange}
-                      checked={selected}
-                      name={value}
-                    />
-                  }
-                  label={`${label} ${count ? `(${count})` : ""}`}
-                />
-              );
-            })}
+            {Object.values(options)
+              .sort((a, b) => {
+                return (
+                  b.count - a.count ||
+                  a.label.toLowerCase().localeCompare(b.label.toLowerCase())
+                );
+              })
+              .map(({ label, value, selected, count }) => {
+                return (
+                  <FormControlLabel
+                    sx={{ height: "30px", overflow: "hidden" }}
+                    key={value}
+                    control={
+                      <Checkbox
+                        onChange={handleChange}
+                        checked={selected}
+                        name={value}
+                      />
+                    }
+                    label={
+                      <FilterOption>
+                        <FilterOptionLabel>{`${label}`}</FilterOptionLabel>
+                        <FilterOptionCount>{`(${count})`}</FilterOptionCount>
+                      </FilterOption>
+                    }
+                  />
+                );
+              })}
           </FormGroup>
         )}
       </FormControl>
-    </Box>
+    </FilterGroupContainer>
   );
 }

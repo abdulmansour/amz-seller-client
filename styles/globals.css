@@ -5,3 +5,7 @@
 .gm-style .gm-style-iw-d {
     max-height: 1000px !important;
 }
+
+.react-datepicker {
+    font-family: serif;
+}

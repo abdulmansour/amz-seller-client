@@ -1,5 +1,5 @@
 import { styled } from "@mui/material/styles";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 export const NavbarContainer = styled(Box)`
   display: flex;
@@ -10,4 +10,4 @@ export const NavbarContainer = styled(Box)`
   height: 40px;
 `;
 
-export const NavbarItem = styled(Box)``;
+export const NavbarItem = styled(Typography)``;

@@ -1,5 +1,5 @@
 import { styled } from "@mui/material/styles";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 export const OrdersContainer = styled(Box)`
   display: flex;
@@ -8,6 +8,9 @@ export const OrdersContainer = styled(Box)`
 export const MapOrdersContainer = styled(Box)`
   display: flex;
   flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
 `;
 
 export const InfoWindowContainer = styled(Box)`
@@ -16,7 +19,7 @@ export const InfoWindowContainer = styled(Box)`
   gap: 20px;
 `;
 
-export const InfoWindowHeader = styled(Box)`
+export const InfoWindowHeader = styled(Typography)`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,18 +44,20 @@ export const InfoWindowRow = styled(Box)`
   gap: 10px;
 `;
 
-export const InfoWindowLabel = styled(Box)`
+export const InfoWindowLabel = styled(Typography)`
   min-width: 100px;
   font-weight: 500;
+  font-size: 12px;
 `;
 
-export const InfoWindowValue = styled(Box)`
+export const InfoWindowValue = styled(Typography)`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-size: 12px;
 `;
 
-export const InfoWindowOrderTotal = styled(Box)`
+export const InfoWindowOrderTotal = styled(Typography)`
   font-weight: 500;
   font-size: 24px;
   color: green;

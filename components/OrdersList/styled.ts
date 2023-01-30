@@ -1,19 +1,21 @@
-import { Box } from "@mui/material";
+import { Box, Paper, Theme, Typography } from "@mui/material";
+import Card from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
+import { Order, OrderOrderStatusEnum } from "@sp-api-sdk/orders-api-v0";
 
-export const OrdersListContainer = styled(Box)`
+export const OrdersListContainer = styled(Paper)`
   display: flex;
   flex-direction: column;
   gap: 10px;
   font-size: 16px;
   justify-content: start;
   align-items: center;
-  width: 20vw;
+  min-width: 20vw;
   height: 60vh;
-  padding: 5px;
+  padding: 15px;
 `;
 
-export const OrdersListHeader = styled(Box)``;
+export const OrdersListHeader = styled(Typography)``;
 
 export const OrdersItemsContainer = styled(Box)`
   display: flex;
@@ -25,28 +27,43 @@ export const OrdersItemsContainer = styled(Box)`
 
 export interface OrderItemContainerProps {
   isselected: number;
+  status: OrderOrderStatusEnum;
 }
 
-export const OrderItemContainer = styled(Box)<OrderItemContainerProps>(
-  ({ isselected }) => ({
+const getBackgroundColor = (
+  isSelected: number,
+  status: OrderOrderStatusEnum,
+  theme: Theme
+) => {
+  if (status === "Shipped") return theme.orderStatus?.shipped;
+  if (status === "Pending") return theme.orderStatus?.pending;
+  if (status === "Canceled") return theme.orderStatus?.canceled;
+  return "";
+};
+
+export const OrderItemContainer = styled(Paper)<OrderItemContainerProps>(
+  ({ isselected, status, theme }) => ({
     display: "flex",
     flexDirection: "column",
     padding: "5px",
-    borderRadius: "8px",
-    border: "1px solid #e4e7eb",
-    gap: "5px",
-    boxShadow: "2px 2px 3px 2px #ebebeb",
-    backgroundColor: isselected ? "#e4e7eb" : "",
+    margin: "5px",
+    backgroundColor: getBackgroundColor(isselected, status, theme),
+    filter: isselected ? "brightness(85%)" : "",
+    ":hover": {
+      cursor: "pointer",
+    },
   })
 );
 
 export const OrderItemHeaderContainer = styled(Box)``;
 
-export const OrderItemHeader = styled(Box)``;
-export const OrderItemSubHeader = styled(Box)`
-  font-size: 12px;
-  color: #797c80;
-`;
+export const OrderItemHeader = styled(Typography)``;
+export const OrderItemSubHeader = styled(Typography)(({ theme }) => ({
+  fontSize: "12px",
+  color: theme.palette.grey[600],
+}));
+
+export const OrderItemValue = styled(Typography)``;
 
 export const OrdersListEmptyMessage = styled(Box)`
   display: flex;

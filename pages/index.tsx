@@ -293,7 +293,7 @@ const HomePage = () => {
   return (
     <HomePageContainer>
       <Navbar />
-      <MainContainer>
+      <MainContainer elevation={6}>
         <FiltersContainer>
           {filters &&
             Object.keys(filters).map((key) => {

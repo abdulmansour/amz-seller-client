@@ -159,15 +159,15 @@ const MapOrders = ({ orders }: MapOrdersProps) => {
                       </InfoWindowHeader>
 
                       <InfoWindoOrderItems>
+                        <InfoWindowRow>
+                          <InfoWindowLabel>Purchase Date</InfoWindowLabel>
+                          <InfoWindowValue>
+                            {getDateToString(order.PurchaseDate)}
+                          </InfoWindowValue>
+                        </InfoWindowRow>
                         {order?.OrderItems?.map((item) => {
                           return (
                             <InfoWindoOrderItem key={item.OrderItemId}>
-                              <InfoWindowRow>
-                                <InfoWindowLabel>Purchase Date</InfoWindowLabel>
-                                <InfoWindowValue>
-                                  {getDateToString(order.PurchaseDate)}
-                                </InfoWindowValue>
-                              </InfoWindowRow>
                               <InfoWindowRow>
                                 <InfoWindowLabel>Title</InfoWindowLabel>
                                 <InfoWindowValue>{item.Title}</InfoWindowValue>
@@ -179,9 +179,7 @@ const MapOrders = ({ orders }: MapOrdersProps) => {
                                 </InfoWindowValue>
                               </InfoWindowRow>
                               <InfoWindowRow>
-                                <InfoWindowLabel>
-                                  Quantity Ordered
-                                </InfoWindowLabel>
+                                <InfoWindowLabel>Quantity</InfoWindowLabel>
                                 <InfoWindowValue>
                                   {item.QuantityOrdered}
                                 </InfoWindowValue>

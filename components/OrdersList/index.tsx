@@ -1,11 +1,14 @@
-import React from "react";
-import { useEffect, useRef } from "react";
+import Link from "next/link";
+import React, { ChangeEvent, useState } from "react";
+import { useEffect } from "react";
 import { CustomOrder } from "../../pages";
+import SearchBar from "../SearchBar";
 import {
   OrderItemContainer,
   OrderItemHeader,
   OrderItemHeaderContainer,
   OrderItemSubHeader,
+  OrderItemValue,
   OrdersItemsContainer,
   OrdersListContainer,
   OrdersListEmptyMessage,
@@ -19,6 +22,29 @@ export interface OrdersListProps {
   handleOnClick: (order: CustomOrder) => void;
 }
 
+function formatDateLongWithTime(date: Date): string {
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    timeZoneName: "short",
+  };
+  return date.toLocaleDateString("en-US", options);
+}
+
+const sortOrders = (orders: CustomOrder[]) => {
+  return orders?.sort((a, b) => {
+    return (
+      b.OrderStatus.localeCompare(a.OrderStatus) ||
+      new Date(b.PurchaseDate).getTime() - new Date(a.PurchaseDate).getTime()
+    );
+  });
+};
+
 export const OrdersList = ({
   orders,
   selectedOrder,
@@ -26,6 +52,7 @@ export const OrdersList = ({
   handleOnClick,
 }: OrdersListProps) => {
   const refs: Record<string, React.RefObject<HTMLDivElement>> = {};
+  const [filteredOrders, setFilteredOrders] = useState(orders);
   useEffect(() => {
     if (selectedOrder) {
       const ref = refs[selectedOrder.AmazonOrderId];
@@ -36,45 +63,56 @@ export const OrdersList = ({
     }
   }, [selectedOrder]);
 
+  const handleOrdersSearch = (searchTerm: string) => {
+    const _filteredOrders = orders?.filter((order) => {
+      return order.AmazonOrderId.includes(searchTerm);
+    });
+    setFilteredOrders(_filteredOrders);
+  };
+
+  useEffect(() => {
+    setFilteredOrders(orders);
+  }, [orders]);
+
   return (
     <OrdersListContainer>
       <OrdersListHeader>Orders ({orders?.length})</OrdersListHeader>
-      {orders?.length ? (
+      <SearchBar handleSearch={handleOrdersSearch} />
+      {filteredOrders?.length ? (
         <OrdersItemsContainer>
-          {orders
-            ?.sort((a, b) => {
-              return (
-                new Date(b.PurchaseDate).getTime() -
-                new Date(a.PurchaseDate).getTime()
-              );
-            })
-            ?.map((order) => {
-              const ref = React.createRef<HTMLDivElement>();
-              refs[order.AmazonOrderId] = ref;
+          {sortOrders(filteredOrders)?.map((order) => {
+            const ref = React.createRef<HTMLDivElement>();
+            refs[order.AmazonOrderId] = ref;
 
-              return (
-                <OrderItemContainer
-                  key={order.AmazonOrderId}
-                  onMouseOver={() => handleMouseOver(order)}
-                  onClick={() => {
-                    handleOnClick(order);
-                  }}
-                  isselected={
-                    order.AmazonOrderId === selectedOrder?.AmazonOrderId ? 1 : 0
-                  }
-                  ref={ref}
-                >
-                  <OrderItemHeaderContainer>
-                    <OrderItemHeader>{order.AmazonOrderId}</OrderItemHeader>
-                    <OrderItemSubHeader>
-                      {new Date(order.PurchaseDate).toLocaleString()}
-                    </OrderItemSubHeader>
-                  </OrderItemHeaderContainer>
+            return (
+              <OrderItemContainer
+                elevation={3}
+                key={order.AmazonOrderId}
+                onMouseOver={() => handleMouseOver(order)}
+                onClick={() => {
+                  handleOnClick(order);
+                }}
+                isselected={
+                  order.AmazonOrderId === selectedOrder?.AmazonOrderId ? 1 : 0
+                }
+                status={order.OrderStatus}
+                ref={ref}
+              >
+                <OrderItemHeaderContainer>
+                  <OrderItemHeader>
+                    <Link href={`/orders/${order.AmazonOrderId}`}>
+                      {order.AmazonOrderId}
+                    </Link>
+                  </OrderItemHeader>
+                  <OrderItemSubHeader>
+                    {formatDateLongWithTime(new Date(order.PurchaseDate))}
+                  </OrderItemSubHeader>
+                </OrderItemHeaderContainer>
 
-                  <div>{order.OrderStatus}</div>
-                </OrderItemContainer>
-              );
-            })}
+                <OrderItemValue>{order.OrderStatus}</OrderItemValue>
+              </OrderItemContainer>
+            );
+          })}
         </OrdersItemsContainer>
       ) : (
         <OrdersListEmptyMessage>
