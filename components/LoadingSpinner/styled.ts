@@ -2,7 +2,7 @@ import { styled } from "@mui/material/styles";
 import { Box } from "@mui/material";
 
 export interface LoadingSpinnerModalProps {
-  loading: boolean;
+  loading: number;
 }
 export const LoadingSpinnerModal = styled(Box)<LoadingSpinnerModalProps>`
   display: ${(props) => (props.loading ? "flex" : "none")};

@@ -59,8 +59,8 @@ export const OrdersList = ({
                   onClick={() => {
                     handleOnClick(order);
                   }}
-                  isSelected={
-                    order.AmazonOrderId === selectedOrder?.AmazonOrderId
+                  isselected={
+                    order.AmazonOrderId === selectedOrder?.AmazonOrderId ? 1 : 0
                   }
                   ref={ref}
                 >

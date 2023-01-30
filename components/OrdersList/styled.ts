@@ -24,24 +24,21 @@ export const OrdersItemsContainer = styled(Box)`
 `;
 
 export interface OrderItemContainerProps {
-  isSelected: boolean;
+  isselected: number;
 }
 
-export const OrderItemContainer = styled(Box)<OrderItemContainerProps>`
-  display: flex;
-  flex-direction: column;
-  padding: 5px;
-  border-radius: 8px;
-  border: 1px solid #e4e7eb;
-  gap: 5px;
-  box-shadow: 2px 2px 3px 2px #ebebeb;
-  background-color: ${({ isSelected }) => (isSelected ? "#e4e7eb" : "")};
-
-  :hover {
-    background-color: #e4e7eb;
-    cursor: pointer;
-  }
-`;
+export const OrderItemContainer = styled(Box)<OrderItemContainerProps>(
+  ({ isselected }) => ({
+    display: "flex",
+    flexDirection: "column",
+    padding: "5px",
+    borderRadius: "8px",
+    border: "1px solid #e4e7eb",
+    gap: "5px",
+    boxShadow: "2px 2px 3px 2px #ebebeb",
+    backgroundColor: isselected ? "#e4e7eb" : "",
+  })
+);
 
 export const OrderItemHeaderContainer = styled(Box)``;
 

@@ -3,7 +3,7 @@ import React, { CSSProperties } from "react";
 import { LoadingSpinnerModal } from "./styled";
 
 export interface LoadingSpinnerProps extends CSSProperties {
-  loading: boolean;
+  loading: number;
 }
 
 export const LoadingSpinner = ({ loading }: LoadingSpinnerProps) => {

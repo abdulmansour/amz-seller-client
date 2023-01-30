@@ -12,14 +12,16 @@ export interface FilterOption {
   label: string;
   value: string;
   selected?: boolean;
+  count?: number;
 }
 
 export interface FilterGroupProps {
   filterLabel: string;
-  filterOptions: FilterOption[] | undefined;
+  filterOptions: Record<string, FilterOption>;
   handleFilterChange: (
     label: FilterLabels,
-    options: FilterOption[] | undefined
+    options: Record<string, FilterOption>,
+    isCheckedAction: boolean
   ) => void;
 }
 
@@ -32,14 +34,18 @@ export default function FilterGroup({
   const [label, setLabel] = useState(filterLabel);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const _options = options?.map((option) => {
+    const _options = Object.entries(options)?.reduce((a, [key, option]) => {
       if (option.value === event.target.name) {
         option.selected = event.target.checked;
       }
-      return option;
-    });
+      return { ...a, [key]: option };
+    }, {} as Record<string, FilterOption>);
 
-    handleFilterChange(filterLabel as FilterLabels, _options);
+    handleFilterChange(
+      filterLabel as FilterLabels,
+      _options,
+      event.target.checked
+    );
   };
 
   useEffect(() => {
@@ -57,26 +63,28 @@ export default function FilterGroup({
         }}
       >
         <FormLabel>{label}</FormLabel>
-        <FormGroup
-          sx={{ maxHeight: "100vh", overflowY: "auto", flexWrap: "nowrap" }}
-          onChange={(event) => console.log(event)}
-        >
-          {options?.map(({ label, value, selected }) => {
-            return (
-              <FormControlLabel
-                key={value}
-                control={
-                  <Checkbox
-                    checked={selected}
-                    onChange={handleChange}
-                    name={value}
-                  />
-                }
-                label={label}
-              />
-            );
-          })}
-        </FormGroup>
+        {options && (
+          <FormGroup
+            sx={{ maxHeight: "100vh", overflowY: "auto", flexWrap: "nowrap" }}
+            onChange={(event) => console.log(event)}
+          >
+            {Object.values(options).map(({ label, value, selected, count }) => {
+              return (
+                <FormControlLabel
+                  key={value}
+                  control={
+                    <Checkbox
+                      onChange={handleChange}
+                      // checked={selected}
+                      name={value}
+                    />
+                  }
+                  label={`${label} ${count ? `(${count})` : ""}`}
+                />
+              );
+            })}
+          </FormGroup>
+        )}
       </FormControl>
     </Box>
   );
