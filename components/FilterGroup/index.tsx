@@ -20,8 +20,7 @@ export interface FilterGroupProps {
   filterOptions: Record<string, FilterOption>;
   handleFilterChange: (
     label: FilterLabels,
-    options: Record<string, FilterOption>,
-    isCheckedAction: boolean
+    options: Record<string, FilterOption>
   ) => void;
 }
 
@@ -41,11 +40,7 @@ export default function FilterGroup({
       return { ...a, [key]: option };
     }, {} as Record<string, FilterOption>);
 
-    handleFilterChange(
-      filterLabel as FilterLabels,
-      _options,
-      event.target.checked
-    );
+    handleFilterChange(filterLabel as FilterLabels, _options);
   };
 
   useEffect(() => {
@@ -75,7 +70,7 @@ export default function FilterGroup({
                   control={
                     <Checkbox
                       onChange={handleChange}
-                      // checked={selected}
+                      checked={selected}
                       name={value}
                     />
                   }

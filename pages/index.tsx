@@ -54,7 +54,8 @@ const HomePage = () => {
   ]);
   const [pickerStartDate, pickerEndDate] = pickerDateRange;
   const [startDate, endDate] = dateRange;
-  const { orders, isLoading } = useOrders({ startDate, endDate });
+  const { orders, isOrdersLoading } = useOrders({ startDate, endDate });
+  const [isLoading, setLoading] = useState<boolean>(false);
   const [filteredOrders, setFilteredOrders] = useState<
     CustomOrder[] | undefined
   >([]);
@@ -63,11 +64,16 @@ const HomePage = () => {
     useState<Record<FilterLabels, Record<string, FilterOption> | undefined>>();
 
   useEffect(() => {
+    setLoading(isOrdersLoading);
+  }, [isOrdersLoading]);
+
+  useEffect(() => {
     greedyPollOrders();
   }, []);
 
   // when orders change, recompute filters and reinitialize filteredOrders
   useEffect(() => {
+    setLoading(true);
     const _marketplaceMap: Record<string, FilterOption> = {};
     orders?.forEach((order) => {
       if (order.MarketplaceId) {
@@ -79,7 +85,13 @@ const HomePage = () => {
           _marketplaceMap[order.MarketplaceId] = {
             label: martketplaceIdToCountry(order.MarketplaceId) || "None",
             value: order.MarketplaceId,
-            selected: filterOption?.selected ? filterOption.selected : false,
+            selected: false,
+            count: 1,
+          };
+        } else {
+          _marketplaceMap[order.MarketplaceId] = {
+            ..._marketplaceMap[order.MarketplaceId],
+            count: (_marketplaceMap[order.MarketplaceId].count as number) + 1,
           };
         }
       }
@@ -95,7 +107,13 @@ const HomePage = () => {
           _statusMap[order.OrderStatus] = {
             label: order.OrderStatus,
             value: order.OrderStatus,
-            selected: filterOption?.selected ? filterOption.selected : false,
+            selected: false,
+            count: 1,
+          };
+        } else {
+          _statusMap[order.OrderStatus] = {
+            ..._statusMap[order.OrderStatus],
+            count: (_statusMap[order.OrderStatus].count as number) + 1,
           };
         }
       }
@@ -113,9 +131,13 @@ const HomePage = () => {
               _skuMap[item.SellerSKU] = {
                 label: item.SellerSKU,
                 value: item.SellerSKU,
-                selected: filterOption?.selected
-                  ? filterOption.selected
-                  : false,
+                selected: false,
+                count: 1,
+              };
+            } else {
+              _skuMap[item.SellerSKU] = {
+                ..._skuMap[item.SellerSKU],
+                count: (_skuMap[item.SellerSKU].count as number) + 1,
               };
             }
           }
@@ -130,7 +152,7 @@ const HomePage = () => {
     };
 
     setFilters(_filters);
-    setFilteredOrders(orders);
+    setLoading(false);
   }, [orders]);
 
   // when filters are initialized and when filter option is selected: generate filteredOrders
@@ -183,31 +205,89 @@ const HomePage = () => {
         }
       });
       setFilteredOrders(_orders);
+      setLoading(false);
     }
   }, [filters]);
 
   // when filter is selected: update filters with updated selection/counts
   const handleFilterChange = (
     label: FilterLabels,
-    options: Record<string, FilterOption>,
-    isCheckedAction: boolean
+    options: Record<string, FilterOption>
   ) => {
-    if (filters) {
+    if (filters && orders) {
+      setLoading(true);
       const _filters = { ...filters, [label]: options };
-
-      // TODO:
-      // we generate the count of each filter option by:
-      // 0. build map selectedFilterOptionsMap: {filterCategory: [filterOption]}
-      // 1. for each filter option that is not selected:
-      //    check selectedFilterOptionsMap and skip current filter category
-      //    2. for each order in orders:
-      //        check remaining selectedFilterOptionsMap
-      //        if order matches remaining selectedFilterOptionsMap AND current filter option
-      //        => increment count by 1 for filter option
-      //   3. store count value for filter option
-
-      setFilters(_filters);
+      setFilters(computeFiltersCount(_filters));
     }
+  };
+
+  const computeFiltersCount = (
+    _filters: Record<FilterLabels, Record<string, FilterOption> | undefined>
+  ) => {
+    if (orders) {
+      const selectedOptionsMap: Record<FilterLabels, string[]> = {} as Record<
+        FilterLabels,
+        string[]
+      >;
+      Object.entries(_filters).forEach(([filterKey, filterValue]) => {
+        if (filterValue) {
+          Object.entries(filterValue).forEach(([optionKey, optionValue]) => {
+            if (optionValue.selected) {
+              if (!(filterKey in selectedOptionsMap)) {
+                selectedOptionsMap[filterKey as FilterLabels] = [
+                  optionValue.value,
+                ];
+              } else {
+                selectedOptionsMap[filterKey as FilterLabels] =
+                  selectedOptionsMap[filterKey as FilterLabels].concat([
+                    optionValue.value,
+                  ]);
+              }
+            }
+          });
+        }
+      });
+
+      Object.entries(_filters).forEach(([filterKey, filterValue]) => {
+        if (filterValue) {
+          Object.entries(filterValue).forEach(([optionKey, optionValue]) => {
+            const _selectedOptionsMap = {
+              ...selectedOptionsMap,
+              [filterKey]: [optionValue.value],
+            };
+
+            const count = orders.reduce((a, order) => {
+              const orderSkus = order.OrderItems?.map((item) => {
+                return item.SellerSKU;
+              });
+              if (
+                order.MarketplaceId &&
+                (!_selectedOptionsMap[FilterLabels.MARKETPLACE] ||
+                  _selectedOptionsMap[FilterLabels.MARKETPLACE].includes(
+                    order.MarketplaceId
+                  )) &&
+                order.OrderStatus &&
+                (!_selectedOptionsMap[FilterLabels.ORDER_STATUS] ||
+                  _selectedOptionsMap[FilterLabels.ORDER_STATUS].includes(
+                    order.OrderStatus
+                  )) &&
+                orderSkus &&
+                (!_selectedOptionsMap[FilterLabels.SKU] ||
+                  orderSkus?.some(
+                    (sku) =>
+                      sku && _selectedOptionsMap[FilterLabels.SKU].includes(sku)
+                  ))
+              )
+                return a + 1;
+              else return a;
+            }, 0);
+
+            optionValue.count = count;
+          });
+        }
+      });
+    }
+    return _filters;
   };
 
   return (
@@ -215,7 +295,7 @@ const HomePage = () => {
       <Navbar />
       <MainContainer>
         <FiltersContainer>
-          {filters ? (
+          {filters &&
             Object.keys(filters).map((key) => {
               return (
                 <FilterGroup
@@ -227,10 +307,7 @@ const HomePage = () => {
                   handleFilterChange={handleFilterChange}
                 />
               );
-            })
-          ) : (
-            <></>
-          )}
+            })}
         </FiltersContainer>
         <VerticalContainer>
           <DatePicker

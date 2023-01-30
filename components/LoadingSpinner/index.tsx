@@ -9,7 +9,7 @@ export interface LoadingSpinnerProps extends CSSProperties {
 export const LoadingSpinner = ({ loading }: LoadingSpinnerProps) => {
   return (
     <LoadingSpinnerModal loading={loading}>
-      <CircularProgress color="primary" />
+      <CircularProgress color="error" />
     </LoadingSpinnerModal>
   );
 };

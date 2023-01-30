@@ -185,6 +185,6 @@ export const useOrders = ({ startDate, endDate }: UseOrderProps) => {
 
   return {
     orders: orders,
-    isLoading: isLoading,
+    isOrdersLoading: isLoading,
   };
 };
