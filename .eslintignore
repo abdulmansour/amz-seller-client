@@ -1,0 +1,4 @@
+workbox-*
+sw*
+worker-*
+next.config.js

@@ -1,4 +1,4 @@
-import { RangeType } from "rsuite/esm/DatePicker";
+import { DateRange, ValueType } from 'rsuite/esm/DateRangePicker';
 
 export function subDays(date: Date, days: number): Date {
   return new Date(date.getTime() - days * 24 * 60 * 60 * 1000);
@@ -41,85 +41,95 @@ export function addMonths(date: Date, months: number): Date {
   return new Date(newYear, newMonthIndex, date.getDate());
 }
 
-export const predefinedRanges: any = [
+export interface PredefinedRange {
+  label: string;
+  value: DateRange | ((value?: ValueType | undefined) => DateRange);
+  placement?: 'bottom' | 'left' | undefined;
+  appearance?: string;
+  closeOverlay?: boolean;
+}
+
+export const predefinedRanges: PredefinedRange[] = [
   {
-    label: "Today",
+    label: 'Today',
     value: [new Date(), new Date()],
-    placement: "left",
+    placement: 'left',
   },
   {
-    label: "Yesterday",
+    label: 'Yesterday',
     value: [addDays(new Date(), -1), addDays(new Date(), -1)],
-    placement: "left",
+    placement: 'left',
   },
   {
-    label: "This week",
+    label: 'This week',
     value: [startOfWeek(new Date()), endOfWeek(new Date())],
-    placement: "left",
+    placement: 'left',
   },
   {
-    label: "Last 7 days",
+    label: 'Last 7 days',
     value: [subDays(new Date(), 6), new Date()],
-    placement: "left",
+    placement: 'left',
   },
   {
-    label: "Last 30 days",
+    label: 'Last 30 days',
     value: [subDays(new Date(), 29), new Date()],
-    placement: "left",
+    placement: 'left',
   },
   {
-    label: "This month",
+    label: 'This month',
     value: [startOfMonth(new Date()), new Date()],
-    placement: "left",
+    placement: 'left',
   },
   {
-    label: "Last month",
+    label: 'Last month',
     value: [
       startOfMonth(addMonths(new Date(), -1)),
       endOfMonth(addMonths(new Date(), -1)),
     ],
-    placement: "left",
+    placement: 'left',
   },
   {
-    label: "This year",
+    label: 'This year',
     value: [new Date(new Date().getFullYear(), 0, 1), new Date()],
-    placement: "left",
+    placement: 'left',
   },
   {
-    label: "Last year",
+    label: 'Last year',
     value: [
       new Date(new Date().getFullYear() - 1, 0, 1),
       new Date(new Date().getFullYear(), 0, 0),
     ],
-    placement: "left",
+    placement: 'left',
   },
   {
-    label: "All time",
+    label: 'All time',
     value: [new Date(new Date().getFullYear() - 3, 0, 1), new Date()],
-    placement: "left",
+    placement: 'left',
   },
   {
-    label: "Last week",
+    label: 'Last week',
     closeOverlay: false,
-    value: (value: never[]) => {
+    value: (value: ValueType | undefined) => {
       const [start = new Date()] = value || [];
       return [
         addDays(startOfWeek(start, { weekStartsOn: 0 }), -7),
         addDays(endOfWeek(start, { weekStartsOn: 0 }), -7),
       ];
     },
-    appearance: "default",
+    appearance: 'default',
+    placement: 'bottom',
   },
   {
-    label: "Next week",
+    label: 'Next week',
     closeOverlay: false,
-    value: (value: never[]) => {
+    value: (value: ValueType | undefined) => {
       const [start = new Date()] = value || [];
       return [
         addDays(startOfWeek(start, { weekStartsOn: 0 }), 7),
         addDays(endOfWeek(start, { weekStartsOn: 0 }), 7),
       ];
     },
-    appearance: "default",
+    appearance: 'default',
+    placement: 'bottom',
   },
 ];
