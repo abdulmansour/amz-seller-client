@@ -43,7 +43,6 @@ export interface MapOrdersProps {
 // https://www.npmjs.com/package/@react-google-maps/api
 // https://react-google-maps-api-docs.netlify.app/
 const MapOrders = ({ orders, clusterize = false }: MapOrdersProps) => {
-  console.log(orders);
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: 'AIzaSyCX2Dlp4vFD1ppaPJt3iLDHe0B4liHI0lU',
@@ -107,6 +106,7 @@ const MapOrders = ({ orders, clusterize = false }: MapOrdersProps) => {
       });
 
       map?.setZoom(12);
+      // eslint-disable-next-line no-console
       console.log(order);
     }
   };

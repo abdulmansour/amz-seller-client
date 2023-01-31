@@ -315,7 +315,6 @@ const HomePage = () => {
                   startOfDay(update[0]),
                   update[1],
                 ];
-                console.log(_dateRange);
                 setDateRange(_dateRange);
               }
             }}

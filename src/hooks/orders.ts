@@ -1,6 +1,6 @@
+import { CustomOrder } from '@pages/index';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
-import { CustomOrder } from '../pages';
 
 export interface UseOrderProps {
   startDate?: Date | null;
@@ -84,6 +84,7 @@ export const getOrdersByDateRange = async (
         });
       })
       .catch((e) => {
+        // eslint-disable-next-line no-console
         console.error(e);
       });
   }

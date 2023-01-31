@@ -18,6 +18,7 @@ const downloadFile = async (
   const doesExist = await storage.bucket(bucketName).file(fileName).exists();
   if (doesExist) {
     await storage.bucket(bucketName).file(fileName).download(options);
+    // eslint-disable-next-line no-console
     console.log(
       `gs://${bucketName}/${fileName} downloaded to ${destFileName}.`
     );
@@ -43,6 +44,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       res.status(200).send(file);
     })
     .catch((e: Error) => {
+      // eslint-disable-next-line no-console
       console.error(e);
       res.send({});
     });

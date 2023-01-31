@@ -1,6 +1,6 @@
+import { CustomOrder } from '@pages/index';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
-import { CustomOrder } from '../../pages';
 import SearchBar from '../SearchBar';
 import {
   OrderItemContainer,

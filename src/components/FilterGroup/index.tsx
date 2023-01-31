@@ -33,7 +33,6 @@ export default function FilterGroup({
   filterOptions,
   handleFilterChange,
 }: FilterGroupProps) {
-  console.log(filterOptions);
   const [options, setOptions] = useState(filterOptions);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -56,7 +55,7 @@ export default function FilterGroup({
       <FilterFormControl>
         <FilterFormLabel>{filterLabel}</FilterFormLabel>
         {options && (
-          <FilterFormGroup onChange={(event) => console.log(event)}>
+          <FilterFormGroup>
             {Object.values(options)
               .sort((a, b) => {
                 return (
