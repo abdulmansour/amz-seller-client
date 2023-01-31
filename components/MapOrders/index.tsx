@@ -3,6 +3,7 @@ import {
   GoogleMap,
   InfoWindow,
   Marker,
+  MarkerClusterer,
   useJsApiLoader,
 } from "@react-google-maps/api";
 import {
@@ -20,6 +21,8 @@ import Link from "next/link";
 import { CustomOrder } from "../../pages";
 import dateFormat from "dateformat";
 import { OrdersList } from "../OrdersList";
+import { Clusterer } from "@react-google-maps/marker-clusterer";
+import cluster from "cluster";
 
 const containerStyle = {
   width: "60vw",
@@ -35,11 +38,12 @@ const defaultZoom = 4;
 
 export interface MapOrdersProps {
   orders: CustomOrder[] | undefined;
+  clusterize: boolean;
 }
 
 // https://www.npmjs.com/package/@react-google-maps/api
 // https://react-google-maps-api-docs.netlify.app/
-const MapOrders = ({ orders }: MapOrdersProps) => {
+const MapOrders = ({ orders, clusterize = false }: MapOrdersProps) => {
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: "AIzaSyCX2Dlp4vFD1ppaPJt3iLDHe0B4liHI0lU",
@@ -106,9 +110,102 @@ const MapOrders = ({ orders }: MapOrdersProps) => {
         lng: _lng,
       });
 
-      map?.setZoom(8);
+      map?.setZoom(12);
       console.log(order);
     }
+  };
+
+  const renderMarkers = (
+    orders: CustomOrder[] | undefined,
+    clusterer: Clusterer | MarkerClusterer | undefined
+  ) => {
+    return orders?.map((order) => {
+      if (
+        order?.ShippingAddressGeoLocation?.latitude &&
+        order?.ShippingAddressGeoLocation?.longitude
+      )
+        return (
+          <Marker
+            onClick={() => {
+              handleMarkerClick(order);
+            }}
+            onMouseOver={() => handleMouseOver(order)}
+            onMouseOut={() => null}
+            key={order.AmazonOrderId}
+            position={{
+              lat: order?.ShippingAddressGeoLocation?.latitude,
+              lng: order?.ShippingAddressGeoLocation?.longitude,
+            }}
+            clusterer={clusterer ? (clusterer as Clusterer) : undefined}
+          >
+            {selectedOrder?.AmazonOrderId === order.AmazonOrderId && (
+              <InfoWindow
+                options={{ maxWidth: 400 }}
+                position={{
+                  lat: order?.ShippingAddressGeoLocation?.latitude,
+                  lng: order?.ShippingAddressGeoLocation?.longitude,
+                }}
+                onCloseClick={() => handleInfoWindoCloseClick()}
+              >
+                <InfoWindowContainer>
+                  <InfoWindowHeader>
+                    <Link href={`/orders/${order.AmazonOrderId}`}>
+                      {order.AmazonOrderId}
+                    </Link>
+                  </InfoWindowHeader>
+
+                  <InfoWindoOrderItems>
+                    <InfoWindowRow>
+                      <InfoWindowLabel>Purchase Date</InfoWindowLabel>
+                      <InfoWindowValue>
+                        {getDateToString(order.PurchaseDate)}
+                      </InfoWindowValue>
+                    </InfoWindowRow>
+                    {order?.OrderItems?.map((item) => {
+                      return (
+                        <InfoWindoOrderItem key={item.OrderItemId}>
+                          <InfoWindowRow>
+                            <InfoWindowLabel>Title</InfoWindowLabel>
+                            <InfoWindowValue>{item.Title}</InfoWindowValue>
+                          </InfoWindowRow>
+                          <InfoWindowRow>
+                            <InfoWindowLabel>SKU</InfoWindowLabel>
+                            <InfoWindowValue>{item.SellerSKU}</InfoWindowValue>
+                          </InfoWindowRow>
+                          <InfoWindowRow>
+                            <InfoWindowLabel>Quantity</InfoWindowLabel>
+                            <InfoWindowValue>
+                              {item.QuantityOrdered}
+                            </InfoWindowValue>
+                          </InfoWindowRow>
+                          <InfoWindowRow>
+                            <InfoWindowLabel>Item Price</InfoWindowLabel>
+                            <InfoWindowValue>
+                              {getTotalItemPrice(
+                                item.ItemPrice?.Amount,
+                                item.ItemTax?.Amount,
+                                item?.ShippingPrice?.Amount,
+                                item?.ShippingDiscount?.Amount,
+                                item.PromotionDiscount?.Amount,
+                                item?.BuyerInfo?.GiftWrapPrice?.Amount,
+                                item?.BuyerInfo?.GiftWrapTax?.Amount
+                              )}{" "}
+                              {item.ItemPrice?.CurrencyCode}
+                            </InfoWindowValue>
+                          </InfoWindowRow>
+                        </InfoWindoOrderItem>
+                      );
+                    })}
+                  </InfoWindoOrderItems>
+                  <InfoWindowOrderTotal>
+                    {order.OrderTotal?.Amount} {order.OrderTotal?.CurrencyCode}
+                  </InfoWindowOrderTotal>
+                </InfoWindowContainer>
+              </InfoWindow>
+            )}
+          </Marker>
+        );
+    });
   };
 
   return isLoaded ? (
@@ -126,93 +223,13 @@ const MapOrders = ({ orders }: MapOrdersProps) => {
           }
         }}
       >
-        {orders?.map((order) => {
-          if (
-            order?.ShippingAddressGeoLocation?.latitude &&
-            order?.ShippingAddressGeoLocation?.longitude
-          )
-            return (
-              <Marker
-                onClick={() => handleMarkerClick(order)}
-                onMouseOver={() => handleMouseOver(order)}
-                onMouseOut={() => null}
-                key={order.AmazonOrderId}
-                position={{
-                  lat: order?.ShippingAddressGeoLocation?.latitude,
-                  lng: order?.ShippingAddressGeoLocation?.longitude,
-                }}
-              >
-                {selectedOrder?.AmazonOrderId === order.AmazonOrderId && (
-                  <InfoWindow
-                    options={{ maxWidth: 400 }}
-                    position={{
-                      lat: order?.ShippingAddressGeoLocation?.latitude,
-                      lng: order?.ShippingAddressGeoLocation?.longitude,
-                    }}
-                    onCloseClick={() => handleInfoWindoCloseClick()}
-                  >
-                    <InfoWindowContainer>
-                      <InfoWindowHeader>
-                        <Link href={`/orders/${order.AmazonOrderId}`}>
-                          {order.AmazonOrderId}
-                        </Link>
-                      </InfoWindowHeader>
-
-                      <InfoWindoOrderItems>
-                        <InfoWindowRow>
-                          <InfoWindowLabel>Purchase Date</InfoWindowLabel>
-                          <InfoWindowValue>
-                            {getDateToString(order.PurchaseDate)}
-                          </InfoWindowValue>
-                        </InfoWindowRow>
-                        {order?.OrderItems?.map((item) => {
-                          return (
-                            <InfoWindoOrderItem key={item.OrderItemId}>
-                              <InfoWindowRow>
-                                <InfoWindowLabel>Title</InfoWindowLabel>
-                                <InfoWindowValue>{item.Title}</InfoWindowValue>
-                              </InfoWindowRow>
-                              <InfoWindowRow>
-                                <InfoWindowLabel>SKU</InfoWindowLabel>
-                                <InfoWindowValue>
-                                  {item.SellerSKU}
-                                </InfoWindowValue>
-                              </InfoWindowRow>
-                              <InfoWindowRow>
-                                <InfoWindowLabel>Quantity</InfoWindowLabel>
-                                <InfoWindowValue>
-                                  {item.QuantityOrdered}
-                                </InfoWindowValue>
-                              </InfoWindowRow>
-                              <InfoWindowRow>
-                                <InfoWindowLabel>Item Price</InfoWindowLabel>
-                                <InfoWindowValue>
-                                  {getTotalItemPrice(
-                                    item.ItemPrice?.Amount,
-                                    item.ItemTax?.Amount,
-                                    item?.ShippingPrice?.Amount,
-                                    item?.ShippingDiscount?.Amount,
-                                    item.PromotionDiscount?.Amount,
-                                    item?.BuyerInfo?.GiftWrapPrice?.Amount,
-                                    item?.BuyerInfo?.GiftWrapTax?.Amount
-                                  )}{" "}
-                                  {item.ItemPrice?.CurrencyCode}
-                                </InfoWindowValue>
-                              </InfoWindowRow>
-                            </InfoWindoOrderItem>
-                          );
-                        })}
-                      </InfoWindoOrderItems>
-                      <InfoWindowOrderTotal>
-                        {order.OrderTotal?.Amount}{" "}
-                        {order.OrderTotal?.CurrencyCode}
-                      </InfoWindowOrderTotal>
-                    </InfoWindowContainer>
-                  </InfoWindow>
-                )}
-              </Marker>
-            );
-        })}
+        {clusterize ? (
+          <MarkerClusterer>
+            {(clusterer) => <div>{renderMarkers(orders, clusterer)}</div>}
+          </MarkerClusterer>
+        ) : (
+          renderMarkers(orders, undefined)
+        )}
       </GoogleMap>
       <OrdersList
         orders={orders}

@@ -7,7 +7,6 @@ export const VerticalContainer = styled(Box)`
   align-items: start;
   justify-content: start;
   gap: 10px;
-  padding-block: 10px;
 `;
 
 export const HomePageContainer = styled(Box)`
@@ -32,4 +31,5 @@ export const MainContainer = styled(Paper)`
   display: flex;
   flex-direction: row;
   gap: 10px;
+  padding-block: 10px;
 `;

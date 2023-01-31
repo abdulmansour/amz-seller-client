@@ -315,6 +315,7 @@ const HomePage = () => {
         </FiltersContainer>
         <VerticalContainer>
           <DateRangePicker
+            showOneCalendar
             ranges={predefinedRanges}
             placeholder="Select date range"
             value={dateRange}
@@ -329,7 +330,10 @@ const HomePage = () => {
               }
             }}
           />
-          <MapOrders orders={filteredOrders} />
+          <MapOrders
+            orders={filteredOrders as CustomOrder[]}
+            clusterize={false}
+          />
         </VerticalContainer>
       </MainContainer>
       <LoadingSpinner loading={isLoading ? 1 : 0} />

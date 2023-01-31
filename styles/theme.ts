@@ -9,6 +9,9 @@ declare module "@mui/material/styles" {
       pending?: string;
       canceled?: string;
     };
+    zIndices?: {
+      loadingSpinner?: number;
+    };
   }
 
   interface Theme extends CustomTheme {}
@@ -42,6 +45,9 @@ const theme = createTheme({
     shipped: "#e6ffe6",
     pending: "#ffffe6",
     canceled: "#ffe6e6",
+  },
+  zIndices: {
+    loadingSpinner: 1000,
   },
 });
 
