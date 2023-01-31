@@ -4,9 +4,10 @@ import { Box, Paper } from "@mui/material";
 export const VerticalContainer = styled(Box)`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: start;
+  justify-content: start;
   gap: 10px;
+  padding-block: 10px;
 `;
 
 export const HomePageContainer = styled(Box)`

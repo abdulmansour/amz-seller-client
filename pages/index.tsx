@@ -7,13 +7,15 @@ import {
   VerticalContainer,
 } from "../layout/HomePage/styled";
 import Navbar from "../layout/NavBar";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { useEffect, useState } from "react";
 import { useOrders } from "../hooks/orders";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { greedyPollOrders } from "../hooks/greedyPollOrders";
 import FilterGroup, { FilterOption } from "../components/FilterGroup";
+import { DateRangePicker } from "rsuite";
+import "rsuite/dist/rsuite.min.css";
+import { predefinedRanges, subDays } from "../utils/dateRanges";
+import { DateRange } from "rsuite/esm/DateRangePicker";
 
 export interface CustomOrder extends Order {
   ShippingAddressGeoLocation?: {
@@ -39,21 +41,23 @@ export const martketplaceIdToCountry = (marketplaceId: string) => {
   if (marketplaceId === "A1AM78C64UM0Y8") return "MX";
 };
 
+export const getStartDate = (): Date => {
+  const date = new Date();
+  date.setDate(date.getDate() - 7);
+  return date;
+};
+
+export const startOfDay = (date: Date): Date => {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+};
+
 const HomePage = () => {
-  const getStartDate = (): Date => {
-    const date = new Date();
-    date.setDate(date.getDate() - 7);
-    return date;
-  };
-  const [pickerDateRange, setPickerDateRange] = useState<
-    [Date | null, Date | null]
-  >([getStartDate(), new Date()]);
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
-    getStartDate(),
+  const [dateRange, setDateRange] = useState<DateRange | null>([
+    startOfDay(subDays(new Date(), 6)),
     new Date(),
   ]);
-  const [pickerStartDate, pickerEndDate] = pickerDateRange;
-  const [startDate, endDate] = dateRange;
+
+  const [startDate, endDate] = [dateRange?.[0], dateRange?.[1]];
   const { orders, isOrdersLoading } = useOrders({ startDate, endDate });
   const [isLoading, setLoading] = useState<boolean>(false);
   const [filteredOrders, setFilteredOrders] = useState<
@@ -310,17 +314,19 @@ const HomePage = () => {
             })}
         </FiltersContainer>
         <VerticalContainer>
-          <DatePicker
-            dateFormat="P"
-            selectsRange={true}
-            startDate={pickerStartDate}
-            endDate={pickerEndDate}
+          <DateRangePicker
+            ranges={predefinedRanges}
+            placeholder="Select date range"
+            value={dateRange}
             onChange={(update) => {
-              if (update[1]) update[1].setUTCHours(23, 59, 59, 999);
-              setPickerDateRange(update);
-            }}
-            onCalendarClose={() => {
-              setDateRange(pickerDateRange);
+              if (update) {
+                const _dateRange: DateRange = [
+                  startOfDay(update[0]),
+                  update[1],
+                ];
+                console.log(_dateRange);
+                setDateRange(_dateRange);
+              }
             }}
           />
           <MapOrders orders={filteredOrders} />
