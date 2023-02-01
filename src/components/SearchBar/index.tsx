@@ -21,6 +21,7 @@ export default function SearchBar({ handleSearch }: SearchBarProps) {
 
   useEffect(() => {
     handleSearch(searchTerm);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
   return (
     <Paper

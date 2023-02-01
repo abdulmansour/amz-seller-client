@@ -1,12 +1,14 @@
 import FilterGroup, { FilterOption } from '@components/FilterGroup';
 import { LoadingSpinner } from '@components/LoadingSpinner';
 import MapOrders from '@components/MapOrders';
+import SalesCard, { Currency } from '@components/SalesCard';
 import { greedyPollOrders } from '@hooks/greedyPollOrders';
 import { useOrders } from '@hooks/orders';
 import {
   FiltersContainer,
   HomePageContainer,
   MainContainer,
+  SalesCardsContainer,
   VerticalContainer,
 } from '@layout/HomePage/styled';
 import Navbar from '@layout/NavBar';
@@ -23,6 +25,7 @@ export interface CustomOrder extends Order {
     longitude?: number;
   };
   OrderItems?: OrderItem[];
+  displayMarker?: boolean;
 }
 
 export interface HomePageProps {
@@ -201,6 +204,7 @@ const HomePage = () => {
       setFilteredOrders(_orders);
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   // when filter is selected: update filters with updated selection/counts
@@ -287,6 +291,14 @@ const HomePage = () => {
   return (
     <HomePageContainer>
       <Navbar />
+      <SalesCardsContainer>
+        <SalesCard
+          orders={filteredOrders}
+          targetCurrency={Currency.USD}
+          baseRateCurrency={Currency.USD}
+          currencies={[Currency.CAD, Currency.MXN]}
+        />
+      </SalesCardsContainer>
       <MainContainer elevation={6}>
         <FiltersContainer>
           {filters &&

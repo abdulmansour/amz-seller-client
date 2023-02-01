@@ -60,6 +60,7 @@ export const OrdersList = ({
         block: 'nearest',
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOrder]);
 
   const handleOrdersSearch = (searchTerm: string) => {
