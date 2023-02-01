@@ -212,12 +212,7 @@ const MapOrders = ({ orders, clusterize = false }: MapOrdersProps) => {
         mapContainerStyle={containerStyle}
         center={center}
         zoom={defaultZoom}
-        onZoomChanged={() => {
-          const _zoom = map?.getZoom();
-          if (_zoom && _zoom < defaultZoom) {
-            map?.setZoom(defaultZoom);
-          }
-        }}
+        options={{ minZoom: 4 }}
       >
         {clusterize ? (
           <MarkerClusterer>
