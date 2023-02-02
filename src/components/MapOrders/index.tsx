@@ -10,7 +10,7 @@ import {
 import { Clusterer } from '@react-google-maps/marker-clusterer';
 import dateFormat from 'dateformat';
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   InfoWindoOrderItem,
   InfoWindoOrderItems,
@@ -24,8 +24,8 @@ import {
 } from './styled';
 
 const containerStyle = {
-  width: '60vw',
-  height: '60vh',
+  width: '100%',
+  height: '100%',
 };
 
 const defaultLatLng = {
@@ -37,12 +37,17 @@ const defaultZoom = 4;
 
 export interface MapOrdersProps {
   orders: CustomOrder[] | undefined;
-  clusterize: boolean;
+  clusterize?: boolean;
+  clusterSize?: number;
 }
 
 // https://www.npmjs.com/package/@react-google-maps/api
 // https://react-google-maps-api-docs.netlify.app/
-const MapOrders = ({ orders, clusterize = false }: MapOrdersProps) => {
+const MapOrders = ({
+  orders,
+  clusterize = false,
+  clusterSize = 2,
+}: MapOrdersProps) => {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: 'AIzaSyCX2Dlp4vFD1ppaPJt3iLDHe0B4liHI0lU',
@@ -70,12 +75,6 @@ const MapOrders = ({ orders, clusterize = false }: MapOrdersProps) => {
   const handleInfoWindoCloseClick = () => {
     setSelectedOrder(undefined);
   };
-
-  const [markerOrders, setMarkerOrders] = useState(orders);
-
-  useEffect(() => {
-    setMarkerOrders(getAllMarkers());
-  }, [orders]);
 
   const getTotalItemPrice = (
     itemPrice: string | undefined,
@@ -117,12 +116,19 @@ const MapOrders = ({ orders, clusterize = false }: MapOrdersProps) => {
     }
   };
 
+  const display = (order: CustomOrder) => {
+    return order?.ShippingAddressGeoLocation?.latitude &&
+      order?.ShippingAddressGeoLocation?.longitude
+      ? true
+      : false;
+  };
+
   const renderMarkers = (
     markers: CustomOrder[] | undefined,
     clusterer: Clusterer | MarkerClusterer | undefined
   ) => {
     return markers?.map((order) => {
-      if (order.displayMarker)
+      if (display(order))
         return (
           <Marker
             onClick={() => {
@@ -207,37 +213,6 @@ const MapOrders = ({ orders, clusterize = false }: MapOrdersProps) => {
     });
   };
 
-  // const getMarkersWithinBounds = () => {
-  //   const _orders = orders?.map((order) => {
-  //     if (
-  //       order?.ShippingAddressGeoLocation?.latitude &&
-  //       order?.ShippingAddressGeoLocation?.longitude
-  //     ) {
-  //       const latLng = {
-  //         lat: order?.ShippingAddressGeoLocation?.latitude,
-  //         lng: order?.ShippingAddressGeoLocation?.longitude,
-  //       };
-  //       const markerInBounds = map?.getBounds()?.contains(latLng);
-  //       order.displayMarker = markerInBounds;
-  //     }
-  //     return order;
-  //   });
-  //   return _orders;
-  // };
-
-  const getAllMarkers = () => {
-    const _orders = orders?.map((order) => {
-      if (
-        order?.ShippingAddressGeoLocation?.latitude &&
-        order?.ShippingAddressGeoLocation?.longitude
-      ) {
-        order.displayMarker = true;
-      }
-      return order;
-    });
-    return _orders;
-  };
-
   return isLoaded ? (
     <MapOrdersContainer>
       <GoogleMap
@@ -247,16 +222,13 @@ const MapOrders = ({ orders, clusterize = false }: MapOrdersProps) => {
         center={center}
         zoom={defaultZoom}
         options={{ minZoom: defaultZoom }}
-        // onDrag={() => {
-        //   setMarkerOrders(getMarkersWithinBounds());
-        // }}
       >
         {clusterize ? (
-          <MarkerClusterer minimumClusterSize={10}>
-            {(clusterer) => <div>{renderMarkers(markerOrders, clusterer)}</div>}
+          <MarkerClusterer minimumClusterSize={clusterSize}>
+            {(clusterer) => <div>{renderMarkers(orders, clusterer)}</div>}
           </MarkerClusterer>
         ) : (
-          renderMarkers(markerOrders, undefined)
+          renderMarkers(orders, undefined)
         )}
       </GoogleMap>
       <OrdersList

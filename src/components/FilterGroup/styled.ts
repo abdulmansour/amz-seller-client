@@ -13,7 +13,6 @@ export const FilterContainer = styled(Paper)(() => ({
   display: 'flex',
   padding: '5px',
   width: '100%',
-  height: 'fit-content',
 }));
 
 export const FilterFormControl = styled(FormControl)(() => ({
@@ -23,10 +22,13 @@ export const FilterFormControl = styled(FormControl)(() => ({
 export const FilterFormLabel = styled(FormLabel)(() => ({}));
 
 export const FilterFormGroup = styled(FormGroup)(() => ({
-  maxHeight: '30vh',
   overflowY: 'auto',
+  textOverflow: 'ellipsis',
   overflowX: 'hidden',
+  whiteSpace: 'nowrap',
+
   flexWrap: 'nowrap',
+
   width: '100%',
   padding: '10px',
 }));

@@ -49,6 +49,44 @@ export interface PredefinedRange {
   closeOverlay?: boolean;
 }
 
+export const setToStartOfDate = (date: Date): Date => {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+};
+
+export const setToEndOfDate = (date: Date) => {
+  date.setUTCHours(23, 59, 59, 59);
+  return date;
+};
+
+export const todayRange = {
+  startDate: setToStartOfDate(new Date()),
+  endDate: new Date(),
+};
+
+export const yesterdayRange = {
+  startDate: setToStartOfDate(addDays(new Date(), -1)),
+  endDate: setToEndOfDate(addDays(new Date(), -1)),
+};
+
+export const last7DaysRange = {
+  startDate: setToStartOfDate(subDays(new Date(), 6)),
+  endDate: new Date(),
+};
+
+export const last30daysRange = {
+  startDate: setToStartOfDate(subDays(new Date(), 29)),
+  endDate: new Date(),
+};
+
+export const formatDateLabel = (date: Date) => {
+  const formattedDate = date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  return formattedDate;
+};
+
 export const predefinedRanges: PredefinedRange[] = [
   {
     label: 'Today',

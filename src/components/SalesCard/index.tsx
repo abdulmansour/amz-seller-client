@@ -1,18 +1,32 @@
+import { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Typography } from '@mui/material';
 import { CustomOrder } from '@pages/index';
 import currency from 'currency.js';
-import { useEffect, useState } from 'react';
+import {
+  CurrencyValue,
+  SalesCardContainer,
+  SalesCardHeader,
+  SalesCardItemContainer,
+  SalesCardItemHeader,
+  SalesCardItemHeaderLabel,
+} from './styled';
 
 export interface SalesCardProps {
-  orders?: CustomOrder[];
-  baseRateCurrency: Currency;
-  targetCurrency: Currency;
-  currencies: Currency[];
+  salesCardItems: SalesCardItem[];
+  headerLabel: string;
 }
 
 export interface ForexRates {
   date: string;
   base: Currency;
   rates: Record<Currency, number>;
+}
+export interface SalesCardItem {
+  label: string;
+  value: number;
+  targetCurrency?: Currency;
+  icon: IconDefinition;
 }
 
 export enum Currency {
@@ -22,11 +36,11 @@ export enum Currency {
 }
 
 export const computeOrdersSales = (
-  orders: CustomOrder[] | undefined,
+  orders: CustomOrder[],
   targetCurrency: Currency,
   rates: Record<Currency, number>
 ) => {
-  return orders?.reduce((a, order) => {
+  return orders.reduce((a, order) => {
     if (order?.OrderTotal?.Amount && order?.OrderTotal?.CurrencyCode)
       return (
         a +
@@ -37,33 +51,50 @@ export const computeOrdersSales = (
   }, 0);
 };
 
-const SalesCard = ({
-  orders,
-  baseRateCurrency = Currency.USD,
-  targetCurrency = Currency.USD,
-  currencies = [Currency.CAD, Currency.MXN],
-}: SalesCardProps) => {
-  const [sales, setSales] = useState(0);
-  const [rates, setRates] = useState<Record<Currency, number>>();
+export const computeOrdersUnits = (orders: CustomOrder[] | undefined) => {
+  const units = orders?.reduce((a, order) => {
+    const itemUnits = order.OrderItems?.reduce((i, item) => {
+      const numberOfItems: string | number | undefined =
+        item.ProductInfo?.NumberOfItems;
+      if (numberOfItems)
+        return (
+          i +
+          (typeof numberOfItems === 'string'
+            ? parseInt(numberOfItems)
+            : numberOfItems)
+        );
 
-  useEffect(() => {
-    const getRates = async () => {
-      await fetch(
-        `api/forex?base=${baseRateCurrency}&symbols=${currencies.join(',')}`
-      )
-        .then((res) => res.json())
-        .then((_rates: Record<Currency, number>) => {
-          setRates(_rates);
-        });
-    };
-    getRates();
-  }, []);
+      return i;
+    }, 0);
+    return a + (itemUnits ? itemUnits : 0);
+  }, 0);
+  return units ? units : 0;
+};
 
-  useEffect(() => {
-    if (orders && rates)
-      setSales(computeOrdersSales(orders, targetCurrency, rates) as number);
-  }, [orders, rates]);
-  return <>{currency(sales).format()}</>;
+const SalesCard = ({ salesCardItems, headerLabel }: SalesCardProps) => {
+  return (
+    <SalesCardContainer>
+      <SalesCardHeader>{headerLabel}</SalesCardHeader>
+      {salesCardItems?.map(({ label, value, targetCurrency, icon }) => {
+        return (
+          <SalesCardItemContainer key={label}>
+            <SalesCardItemHeader>
+              <SalesCardItemHeaderLabel>{label}</SalesCardItemHeaderLabel>
+              <FontAwesomeIcon icon={icon} size="xl" />
+            </SalesCardItemHeader>
+
+            {targetCurrency ? (
+              <CurrencyValue>
+                {`${currency(value).format()} ${targetCurrency}`}
+              </CurrencyValue>
+            ) : (
+              <Typography>{value}</Typography>
+            )}
+          </SalesCardItemContainer>
+        );
+      })}
+    </SalesCardContainer>
+  );
 };
 
 export default SalesCard;

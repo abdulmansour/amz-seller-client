@@ -1,6 +1,10 @@
+import {
+  faCube,
+  faDolly,
+  faMoneyCheckDollar,
+} from '@fortawesome/free-solid-svg-icons';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
-import { ordersSample } from '@utils/samples';
-import SalesCard from '.';
+import SalesCard, { Currency } from '.';
 
 // More on default export: https://storybook.js.org/docs/react/writing-stories/introduction#default-export
 export default {
@@ -8,7 +12,27 @@ export default {
   component: SalesCard,
   // More on argTypes: https://storybook.js.org/docs/react/api/argtypes
   argTypes: {
-    orders: { defaultValue: ordersSample },
+    headerLabel: { defaultValue: 'Today' },
+    salesCardItems: {
+      defaultValue: [
+        {
+          label: 'Sales',
+          targetCurrency: Currency.USD,
+          value: 1000,
+          icon: faMoneyCheckDollar,
+        },
+        {
+          label: 'Orders',
+          value: 10,
+          icon: faDolly,
+        },
+        {
+          label: 'Units',
+          value: 11,
+          icon: faCube,
+        },
+      ],
+    },
   },
 } as ComponentMeta<typeof SalesCard>;
 

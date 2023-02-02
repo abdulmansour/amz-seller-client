@@ -9,3 +9,10 @@
 .react-datepicker {
   font-family: serif;
 }
+
+.rs-picker-toggle-wrapper {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}

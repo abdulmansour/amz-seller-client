@@ -9,12 +9,18 @@ export const OrdersListContainer = styled(Paper)`
   font-size: 16px;
   justify-content: start;
   align-items: center;
-  min-width: 20vw;
-  height: 60vh;
   padding: 15px;
+  overflow: auto;
+  height: 100%;
 `;
 
-export const OrdersListHeader = styled(Typography)``;
+export const OrdersListHeader = styled(Typography)`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1px;
+`;
 
 export const OrdersItemsContainer = styled(Box)`
   display: flex;

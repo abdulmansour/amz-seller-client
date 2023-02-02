@@ -1,19 +1,24 @@
 import FilterGroup, { FilterOption } from '@components/FilterGroup';
 import { LoadingSpinner } from '@components/LoadingSpinner';
 import MapOrders from '@components/MapOrders';
-import SalesCard, { Currency } from '@components/SalesCard';
+import { Currency } from '@components/SalesCard';
+import { SalesCards } from '@components/SalesCards';
 import { greedyPollOrders } from '@hooks/greedyPollOrders';
 import { useOrders } from '@hooks/orders';
 import {
   FiltersContainer,
+  FiltersRow,
   HomePageContainer,
   MainContainer,
-  SalesCardsContainer,
-  VerticalContainer,
+  MapSectionContainer,
 } from '@layout/HomePage/styled';
-import Navbar from '@layout/NavBar';
 import { Order, OrderItem } from '@sp-api-sdk/orders-api-v0';
-import { predefinedRanges, subDays } from '@utils/dateRanges';
+import {
+  formatDateLabel,
+  predefinedRanges,
+  setToStartOfDate,
+  subDays,
+} from '@utils/dateRanges';
 import { useEffect, useState } from 'react';
 import { DateRangePicker } from 'rsuite';
 import 'rsuite/dist/rsuite.min.css';
@@ -50,23 +55,22 @@ export const getStartDate = (): Date => {
   return date;
 };
 
-export const startOfDay = (date: Date): Date => {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-};
-
 const HomePage = () => {
+  const baseRateCurrency = Currency.USD;
+  const targetCurrency = Currency.USD;
+
   const [dateRange, setDateRange] = useState<DateRange | null>([
-    startOfDay(subDays(new Date(), 6)),
+    setToStartOfDate(subDays(new Date(), 6)),
     new Date(),
   ]);
 
   const [startDate, endDate] = [dateRange?.[0], dateRange?.[1]];
   const { orders, isOrdersLoading } = useOrders({ startDate, endDate });
+
   const [isLoading, setLoading] = useState<boolean>(false);
   const [filteredOrders, setFilteredOrders] = useState<
     CustomOrder[] | undefined
   >([]);
-
   const [filters, setFilters] =
     useState<Record<FilterLabels, Record<string, FilterOption> | undefined>>();
 
@@ -290,15 +294,12 @@ const HomePage = () => {
 
   return (
     <HomePageContainer>
-      <Navbar />
-      <SalesCardsContainer>
-        <SalesCard
-          orders={filteredOrders}
-          targetCurrency={Currency.USD}
-          baseRateCurrency={Currency.USD}
-          currencies={[Currency.CAD, Currency.MXN]}
-        />
-      </SalesCardsContainer>
+      <SalesCards
+        orders={filteredOrders}
+        dateRange={dateRange}
+        baseRateCurrency={baseRateCurrency}
+        targetCurrency={targetCurrency}
+      />
       <MainContainer elevation={6}>
         <FiltersContainer>
           {filters &&
@@ -315,27 +316,36 @@ const HomePage = () => {
               );
             })}
         </FiltersContainer>
-        <VerticalContainer>
-          <DateRangePicker
-            showOneCalendar
-            ranges={predefinedRanges}
-            placeholder="Select date range"
-            value={dateRange}
-            onChange={(update) => {
-              if (update) {
-                const _dateRange: DateRange = [
-                  startOfDay(update[0]),
-                  update[1],
-                ];
-                setDateRange(_dateRange);
-              }
-            }}
-          />
+        <MapSectionContainer>
+          <FiltersRow>
+            <DateRangePicker
+              renderValue={([startDate, endDate]) => {
+                return `${formatDateLabel(startDate)} - ${formatDateLabel(
+                  endDate
+                )}`;
+              }}
+              showOneCalendar
+              ranges={predefinedRanges}
+              placeholder="Select date range"
+              value={dateRange}
+              onChange={(update) => {
+                if (update) {
+                  const _dateRange: DateRange = [
+                    setToStartOfDate(update[0]),
+                    update[1],
+                  ];
+                  setDateRange(_dateRange);
+                }
+              }}
+            />
+            {/* <FilterChips /> */}
+          </FiltersRow>
           <MapOrders
             orders={filteredOrders as CustomOrder[]}
             clusterize={false}
+            clusterSize={5}
           />
-        </VerticalContainer>
+        </MapSectionContainer>
       </MainContainer>
       <LoadingSpinner loading={isLoading ? 1 : 0} />
     </HomePageContainer>

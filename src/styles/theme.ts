@@ -1,6 +1,5 @@
 import { red } from '@mui/material/colors';
 import { createTheme } from '@mui/material/styles';
-import { Roboto } from '@next/font/google';
 
 declare module '@mui/material/styles' {
   interface CustomTheme {
@@ -12,6 +11,11 @@ declare module '@mui/material/styles' {
     zIndices?: {
       loadingSpinner?: number;
     };
+    customPalette: {
+      money: {
+        main: string;
+      };
+    };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -20,28 +24,23 @@ declare module '@mui/material/styles' {
   interface ThemeOptions extends CustomTheme {}
 }
 
-export const roboto = Roboto({
-  weight: ['300', '400', '500', '700'],
-  subsets: ['latin'],
-  display: 'swap',
-  fallback: ['Helvetica', 'Arial', 'sans-serif'],
-});
-
 // Create a theme instance.
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#556cd6',
+      main: '#1e90ff',
     },
     secondary: {
-      main: '#19857b',
+      main: '#ff9900',
     },
     error: {
       main: red.A400,
     },
   },
-  typography: {
-    fontFamily: roboto.style.fontFamily,
+  customPalette: {
+    money: {
+      main: 'green',
+    },
   },
   orderStatus: {
     shipped: '#e6ffe6',

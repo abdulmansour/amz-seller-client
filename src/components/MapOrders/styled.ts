@@ -9,8 +9,10 @@ export const MapOrdersContainer = styled(Box)`
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
+  width: 100%;
+  height: 720px;
 `;
 
 export const InfoWindowContainer = styled(Box)`

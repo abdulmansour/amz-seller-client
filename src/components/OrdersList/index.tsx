@@ -1,3 +1,4 @@
+import { Typography } from '@mui/material';
 import { CustomOrder } from '@pages/index';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
@@ -55,12 +56,11 @@ export const OrdersList = ({
   useEffect(() => {
     if (selectedOrder) {
       const ref = refs[selectedOrder.AmazonOrderId];
-      ref.current?.scrollIntoView({
+      ref?.current?.scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOrder]);
 
   const handleOrdersSearch = (searchTerm: string) => {
@@ -74,45 +74,55 @@ export const OrdersList = ({
     setFilteredOrders(orders);
   }, [orders]);
 
+  const sliceOrdersSize = 50;
+
   return (
     <OrdersListContainer>
-      <OrdersListHeader>Orders ({orders?.length})</OrdersListHeader>
+      <OrdersListHeader>
+        Orders ({orders?.length})
+        <Typography sx={{ fontSize: 10, color: '#9d9d9d' }}>
+          {`*List displaying latest ${sliceOrdersSize} orders`}
+        </Typography>
+      </OrdersListHeader>
+
       <SearchBar handleSearch={handleOrdersSearch} />
       {filteredOrders?.length ? (
         <OrdersItemsContainer>
-          {sortOrders(filteredOrders)?.map((order) => {
-            const ref = React.createRef<HTMLDivElement>();
-            refs[order.AmazonOrderId] = ref;
+          {sortOrders(filteredOrders)
+            ?.slice(0, sliceOrdersSize)
+            .map((order) => {
+              const ref = React.createRef<HTMLDivElement>();
+              refs[order.AmazonOrderId] = ref;
 
-            return (
-              <OrderItemContainer
-                elevation={3}
-                key={order.AmazonOrderId}
-                onMouseOver={() => handleMouseOver?.(order)}
-                onClick={() => {
-                  handleOnClick?.(order);
-                }}
-                isselected={
-                  order.AmazonOrderId === selectedOrder?.AmazonOrderId ? 1 : 0
-                }
-                status={order.OrderStatus}
-                ref={ref}
-              >
-                <OrderItemHeaderContainer>
-                  <OrderItemHeader>
-                    <Link href={`/orders/${order.AmazonOrderId}`}>
-                      {order.AmazonOrderId}
-                    </Link>
-                  </OrderItemHeader>
-                  <OrderItemSubHeader>
-                    {formatDateLongWithTime(new Date(order.PurchaseDate))}
-                  </OrderItemSubHeader>
-                </OrderItemHeaderContainer>
+              return (
+                <OrderItemContainer
+                  elevation={3}
+                  key={order.AmazonOrderId}
+                  onMouseOver={() => handleMouseOver?.(order)}
+                  onClick={() => {
+                    handleOnClick?.(order);
+                  }}
+                  isselected={
+                    order.AmazonOrderId === selectedOrder?.AmazonOrderId ? 1 : 0
+                  }
+                  status={order.OrderStatus}
+                  ref={ref}
+                >
+                  <OrderItemHeaderContainer>
+                    <OrderItemHeader>
+                      <Link href={`/orders/${order.AmazonOrderId}`}>
+                        {order.AmazonOrderId}
+                      </Link>
+                    </OrderItemHeader>
+                    <OrderItemSubHeader>
+                      {formatDateLongWithTime(new Date(order.PurchaseDate))}
+                    </OrderItemSubHeader>
+                  </OrderItemHeaderContainer>
 
-                <OrderItemValue>{order.OrderStatus}</OrderItemValue>
-              </OrderItemContainer>
-            );
-          })}
+                  <OrderItemValue>{order.OrderStatus}</OrderItemValue>
+                </OrderItemContainer>
+              );
+            })}
         </OrdersItemsContainer>
       ) : (
         <OrdersListEmptyMessage>
