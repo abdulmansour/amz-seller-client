@@ -9,7 +9,6 @@ import {
   faMoneyCheckDollar,
 } from '@fortawesome/free-solid-svg-icons';
 import { UseOrderProps, useOrders } from '@hooks/orders';
-import { useForex } from '@hooks/useForex';
 import { CircularProgress, useMediaQuery } from '@mui/material';
 import { CustomOrder } from '@pages/index';
 import {
@@ -25,18 +24,16 @@ import { SalesCardsContainer } from './styled';
 export interface SalesCardsProps {
   orders?: CustomOrder[];
   dateRange: DateRange | null;
-  baseRateCurrency: Currency;
+  rates?: Record<Currency, number>;
   targetCurrency: Currency;
 }
 
 export const SalesCards = ({
   orders,
   dateRange,
-  baseRateCurrency,
+  rates,
   targetCurrency,
 }: SalesCardsProps) => {
-  const currencies = [Currency.CAD, Currency.MXN];
-  const { rates } = useForex(baseRateCurrency, currencies);
   const { orders: todayOrders } = useOrders(todayRange as UseOrderProps);
   const { orders: yesterdayOrders } = useOrders(
     yesterdayRange as UseOrderProps

@@ -5,6 +5,7 @@ export const HomePageContainer = styled(Box)`
   display: flex;
   flex-direction: column;
   padding: 10px;
+  gap: 20px;
 `;
 
 export const MainContainer = styled(Paper)`
@@ -13,7 +14,7 @@ export const MainContainer = styled(Paper)`
   gap: 10px;
   padding: 10px;
   width: 100%;
-  height: 800px;
+  height: 600px;
 `;
 
 export const FiltersContainer = styled(Box)(({ theme }) => ({

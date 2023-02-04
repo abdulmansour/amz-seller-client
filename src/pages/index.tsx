@@ -1,12 +1,14 @@
 import FilterGroup, { FilterOption } from '@components/FilterGroup';
 import { LoadingSpinner } from '@components/LoadingSpinner';
 import MapOrders from '@components/MapOrders';
+import OrdersTable from '@components/OrdersTable';
 import { Currency } from '@components/SalesCard';
 import { SalesCards } from '@components/SalesCards';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { greedyPollOrders } from '@hooks/greedyPollOrders';
 import { useOrders } from '@hooks/orders';
+import { useForex } from '@hooks/useForex';
 import {
   FiltersContainer,
   FiltersRow,
@@ -70,6 +72,8 @@ export const getStartDate = (): Date => {
 const HomePage = () => {
   const baseRateCurrency = Currency.USD;
   const targetCurrency = Currency.USD;
+  const currencies = [Currency.CAD, Currency.MXN];
+  const { rates } = useForex(baseRateCurrency, currencies);
 
   const [dateRange, setDateRange] = useState<DateRange | null>([
     setToStartOfDate(subDays(new Date(), 6)),
@@ -313,7 +317,7 @@ const HomePage = () => {
       <SalesCards
         orders={filteredOrders}
         dateRange={dateRange}
-        baseRateCurrency={baseRateCurrency}
+        rates={rates}
         targetCurrency={targetCurrency}
       />
       <MainContainer elevation={3}>
@@ -411,6 +415,13 @@ const HomePage = () => {
           />
         </MapSectionContainer>
       </MainContainer>
+
+      <OrdersTable
+        orders={filteredOrders}
+        rates={rates}
+        targetCurrency={targetCurrency}
+      />
+
       <LoadingSpinner loading={isLoading ? 1 : 0} />
     </HomePageContainer>
   );

@@ -14,7 +14,7 @@ export const MapOrdersContainer = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   gap: '10px',
   width: '100%',
-  height: '720px',
+  height: '535px',
 }));
 
 export const InfoWindowContainer = styled(Box)`
