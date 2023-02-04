@@ -4,7 +4,7 @@ export const SalesCardContainer = styled(Paper)(({}) => ({
   display: 'flex',
   flexDirection: 'column',
   padding: '10px',
-  gap: '15px',
+  gap: '10px',
   width: '100%',
 }));
 

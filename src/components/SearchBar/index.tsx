@@ -32,7 +32,7 @@ export default function SearchBar({ handleSearch }: SearchBarProps) {
         alignItems: 'center',
         width: '100%',
       }}
-      elevation={6}
+      elevation={3}
     >
       <InputBase
         value={searchTerm}

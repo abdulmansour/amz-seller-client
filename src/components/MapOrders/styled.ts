@@ -4,16 +4,18 @@ import { styled } from '@mui/material/styles';
 export const OrdersContainer = styled(Box)`
   display: flex;
 `;
-
-export const MapOrdersContainer = styled(Box)`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 10px;
-  width: 100%;
-  height: 720px;
-`;
+export const MapOrdersContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  [theme.breakpoints.down('md')]: {
+    flexDirection: 'column',
+  },
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  gap: '10px',
+  width: '100%',
+  height: '720px',
+}));
 
 export const InfoWindowContainer = styled(Box)`
   display: flex;

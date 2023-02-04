@@ -50,7 +50,8 @@ export interface PredefinedRange {
 }
 
 export const setToStartOfDate = (date: Date): Date => {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return d;
 };
 
 export const setToEndOfDate = (date: Date) => {

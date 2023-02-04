@@ -29,3 +29,16 @@ registerRoute(
   }),
   'GET'
 );
+
+registerRoute(
+  /\/api\/forex.*$/i,
+  new CacheFirst({
+    cacheName: 'forex',
+    plugins: [
+      new ExpirationPlugin({
+        maxAgeSeconds: 8 * 60 * 60,
+      }),
+    ],
+  }),
+  'GET'
+);

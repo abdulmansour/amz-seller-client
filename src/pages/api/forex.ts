@@ -6,7 +6,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const symbols = req?.query?.symbols as string;
 
   await fetch(
-    `https://theforexapi.com/api/latest?base=${base}&symbols=${symbols}`
+    `https://api.apilayer.com/fixer/latest?base=${base}&symbols=${symbols}`,
+    {
+      headers: { apikey: process.env.FIXER_API_KEY as string },
+    }
   )
     .then((res) => res.json())
     .then(({ base, rates }: ForexRates) => {
@@ -17,6 +20,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         [base]: 1,
       };
       res.send(_rates);
+    })
+    .catch(() => {
+      res.send({});
     });
 };
 

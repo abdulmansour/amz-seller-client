@@ -3,6 +3,8 @@ import { LoadingSpinner } from '@components/LoadingSpinner';
 import MapOrders from '@components/MapOrders';
 import { Currency } from '@components/SalesCard';
 import { SalesCards } from '@components/SalesCards';
+import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { greedyPollOrders } from '@hooks/greedyPollOrders';
 import { useOrders } from '@hooks/orders';
 import {
@@ -11,11 +13,21 @@ import {
   HomePageContainer,
   MainContainer,
   MapSectionContainer,
+  MobileFiltersContainer,
+  MobileFiltersXContainer,
 } from '@layout/HomePage/styled';
+import {
+  Button,
+  IconButton,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 import { Order, OrderItem } from '@sp-api-sdk/orders-api-v0';
 import {
   formatDateLabel,
   predefinedRanges,
+  setToEndOfDate,
   setToStartOfDate,
   subDays,
 } from '@utils/dateRanges';
@@ -73,6 +85,10 @@ const HomePage = () => {
   >([]);
   const [filters, setFilters] =
     useState<Record<FilterLabels, Record<string, FilterOption> | undefined>>();
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [isMobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
 
   useEffect(() => {
     setLoading(isOrdersLoading);
@@ -300,22 +316,61 @@ const HomePage = () => {
         baseRateCurrency={baseRateCurrency}
         targetCurrency={targetCurrency}
       />
-      <MainContainer elevation={6}>
-        <FiltersContainer>
-          {filters &&
-            Object.keys(filters).map((key) => {
-              return (
-                <FilterGroup
-                  key={key}
-                  filterLabel={key}
-                  filterOptions={
-                    filters[key as FilterLabels] as Record<string, FilterOption>
+      <MainContainer elevation={3}>
+        {!isMobile && (
+          <FiltersContainer>
+            {filters &&
+              Object.keys(filters).map((key) => {
+                return (
+                  <FilterGroup
+                    key={key}
+                    filterLabel={key}
+                    filterOptions={
+                      filters[key as FilterLabels] as Record<
+                        string,
+                        FilterOption
+                      >
+                    }
+                    handleFilterChange={handleFilterChange}
+                  />
+                );
+              })}
+          </FiltersContainer>
+        )}
+        {isMobile && (
+          <MobileFiltersContainer open={isMobileFiltersOpen}>
+            <FiltersContainer>
+              <MobileFiltersXContainer>
+                <Typography sx={{ fontWeight: 600, fontSize: '18px' }}>
+                  Filters
+                </Typography>
+                <IconButton
+                  onClick={() =>
+                    setMobileFiltersOpen(isMobileFiltersOpen ? false : true)
                   }
-                  handleFilterChange={handleFilterChange}
-                />
-              );
-            })}
-        </FiltersContainer>
+                >
+                  <FontAwesomeIcon icon={faXmark} />
+                </IconButton>
+              </MobileFiltersXContainer>
+              {filters &&
+                Object.keys(filters).map((key) => {
+                  return (
+                    <FilterGroup
+                      key={key}
+                      filterLabel={key}
+                      filterOptions={
+                        filters[key as FilterLabels] as Record<
+                          string,
+                          FilterOption
+                        >
+                      }
+                      handleFilterChange={handleFilterChange}
+                    />
+                  );
+                })}
+            </FiltersContainer>
+          </MobileFiltersContainer>
+        )}
         <MapSectionContainer>
           <FiltersRow>
             <DateRangePicker
@@ -332,12 +387,21 @@ const HomePage = () => {
                 if (update) {
                   const _dateRange: DateRange = [
                     setToStartOfDate(update[0]),
-                    update[1],
+                    setToEndOfDate(update[1]),
                   ];
                   setDateRange(_dateRange);
                 }
               }}
             />
+            {isMobile && (
+              <Button
+                onClick={() =>
+                  setMobileFiltersOpen(isMobileFiltersOpen ? false : true)
+                }
+              >
+                Filters
+              </Button>
+            )}
             {/* <FilterChips /> */}
           </FiltersRow>
           <MapOrders

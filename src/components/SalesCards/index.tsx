@@ -10,7 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { UseOrderProps, useOrders } from '@hooks/orders';
 import { useForex } from '@hooks/useForex';
-import { CircularProgress } from '@mui/material';
+import { CircularProgress, useMediaQuery } from '@mui/material';
 import { CustomOrder } from '@pages/index';
 import {
   formatDateLabel,
@@ -48,28 +48,38 @@ export const SalesCards = ({
     last30daysRange as UseOrderProps
   );
 
+  const isMobile = useMediaQuery('(max-width:900px)');
+
+  const salesCards = (isMobile: boolean) => {
+    if (isMobile && dateRange)
+      return [
+        {
+          headerLabel: `${formatDateLabel(dateRange[0])} - ${formatDateLabel(
+            dateRange[1]
+          )}`,
+          rangeOrders: orders,
+        },
+      ];
+    else if (!isMobile && dateRange)
+      return [
+        {
+          headerLabel: `${formatDateLabel(dateRange[0])} - ${formatDateLabel(
+            dateRange[1]
+          )}`,
+          rangeOrders: orders,
+        },
+        { headerLabel: 'Today', rangeOrders: todayOrders },
+        { headerLabel: 'Yesterday', rangeOrders: yesterdayOrders },
+        { headerLabel: 'Last 7 Days', rangeOrders: last7DaysOrders },
+        { headerLabel: 'Last 30 Days', rangeOrders: last30DaysOrders },
+      ];
+  };
+
   return (
     <SalesCardsContainer>
-      {rates &&
-      orders &&
-      todayOrders &&
-      yesterdayOrders &&
-      last7DaysOrders &&
-      last30DaysOrders &&
-      dateRange ? (
+      {rates && dateRange ? (
         <>
-          {[
-            {
-              headerLabel: `${formatDateLabel(
-                dateRange[0]
-              )} - ${formatDateLabel(dateRange[1])}`,
-              rangeOrders: orders,
-            },
-            { headerLabel: 'Today', rangeOrders: todayOrders },
-            { headerLabel: 'Yesterday', rangeOrders: yesterdayOrders },
-            { headerLabel: 'Last 7 Days', rangeOrders: last7DaysOrders },
-            { headerLabel: 'Last 30 Days', rangeOrders: last30DaysOrders },
-          ].map(({ headerLabel, rangeOrders }) => {
+          {salesCards(isMobile)?.map(({ headerLabel, rangeOrders }) => {
             return (
               <SalesCard
                 key={headerLabel}
@@ -87,7 +97,7 @@ export const SalesCards = ({
                   },
                   {
                     label: 'Orders',
-                    value: rangeOrders.length,
+                    value: rangeOrders?.length || 0,
                     icon: faDolly,
                   },
                   {

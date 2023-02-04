@@ -2,17 +2,35 @@ import { Box, Paper, Theme, Typography } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { OrderOrderStatusEnum } from '@sp-api-sdk/orders-api-v0';
 
-export const OrdersListContainer = styled(Paper)`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font-size: 16px;
-  justify-content: start;
-  align-items: center;
-  padding: 15px;
-  overflow: auto;
-  height: 100%;
-`;
+export const OrdersListContainer = styled(Paper)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px',
+  fontSize: '16px',
+  justifyContent: 'start',
+  alignItems: 'center',
+  overflow: 'auto',
+  height: '100%',
+  width: '300px',
+  [theme.breakpoints.down('md')]: {
+    width: '100%',
+  },
+}));
+
+export const FiltersContainer = styled(Box)(({ theme }) => ({
+  [theme.breakpoints.down('md')]: {
+    display: 'none',
+  },
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '5px',
+  overflowY: 'auto',
+  height: '100%',
+  width: '300px',
+
+  fontWeight: 500,
+  color: theme.customPalette.money.main,
+}));
 
 export const OrdersListHeader = styled(Typography)`
   display: flex;

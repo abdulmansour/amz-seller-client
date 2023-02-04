@@ -5,6 +5,6 @@ export const SalesCardsContainer = styled(Box)(({}) => ({
   flexDirection: 'row',
   justifyContent: 'space-around',
   alignItems: 'center',
-  padding: '20px',
-  gap: '30px',
+  padding: '10px',
+  gap: '10px',
 }));

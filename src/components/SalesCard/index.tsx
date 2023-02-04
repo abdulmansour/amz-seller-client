@@ -36,11 +36,11 @@ export enum Currency {
 }
 
 export const computeOrdersSales = (
-  orders: CustomOrder[],
+  orders: CustomOrder[] | undefined,
   targetCurrency: Currency,
   rates: Record<Currency, number>
 ) => {
-  return orders.reduce((a, order) => {
+  const sales = orders?.reduce((a, order) => {
     if (order?.OrderTotal?.Amount && order?.OrderTotal?.CurrencyCode)
       return (
         a +
@@ -49,6 +49,7 @@ export const computeOrdersSales = (
       );
     return a;
   }, 0);
+  return sales ? sales : 0;
 };
 
 export const computeOrdersUnits = (orders: CustomOrder[] | undefined) => {

@@ -50,7 +50,7 @@ const MapOrders = ({
 }: MapOrdersProps) => {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: 'AIzaSyCX2Dlp4vFD1ppaPJt3iLDHe0B4liHI0lU',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY as string,
   });
 
   const [center, setCenter] = useState(defaultLatLng);
