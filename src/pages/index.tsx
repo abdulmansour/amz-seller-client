@@ -319,6 +319,7 @@ const HomePage = () => {
         dateRange={dateRange}
         rates={rates}
         targetCurrency={targetCurrency}
+        skuFilters={filters?.SKU}
       />
       <MainContainer elevation={3}>
         {!isMobile && (
@@ -420,6 +421,7 @@ const HomePage = () => {
         orders={filteredOrders}
         rates={rates}
         targetCurrency={targetCurrency}
+        skuFilters={filters?.SKU}
       />
 
       <LoadingSpinner loading={isLoading ? 1 : 0} />

@@ -1,3 +1,4 @@
+import { FilterOption } from '@components/FilterGroup';
 import { Currency } from '@components/SalesCard';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -14,11 +15,12 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { visuallyHidden } from '@mui/utils';
 import { CustomOrder } from '@pages/index';
+import { OrderItem } from '@sp-api-sdk/orders-api-v0';
 import currency from 'currency.js';
 import * as React from 'react';
 import { TableCellCurrency } from './styled';
 
-interface Data {
+export interface Data {
   sku: string;
   sales: number;
   orders: number;
@@ -151,12 +153,16 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 }
 
 interface EnhancedTableToolbarProps {
+  salesSum: number;
   numSelected: number;
+  targetCurrency: Currency;
 }
 
-function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
-  const { numSelected } = props;
-
+function EnhancedTableToolbar({
+  numSelected,
+  salesSum,
+  targetCurrency,
+}: EnhancedTableToolbarProps) {
   return (
     <Toolbar
       sx={{
@@ -187,7 +193,7 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
           id="tableTitle"
           component="div"
         >
-          Products
+          Products ({currency(salesSum).format()} {targetCurrency})
         </Typography>
       )}
     </Toolbar>
@@ -198,74 +204,128 @@ export interface OrdersTableProps {
   orders?: CustomOrder[];
   targetCurrency: Currency;
   rates?: Record<Currency, number>;
+  skuFilters?: Record<string, FilterOption> | undefined;
 }
+
+export const getSkusFromSkuFilters = (
+  skuFilters: Record<string, FilterOption> | undefined
+) => {
+  if (skuFilters) {
+    const skus = Object.values(skuFilters).reduce((a, filterOption) => {
+      if (filterOption?.selected) {
+        a.push(filterOption.value);
+        return a;
+      }
+      return a;
+    }, [] as string[]);
+    return skus;
+  } else {
+    return [];
+  }
+};
+
+export const _parseFloat = (v?: string) => {
+  return v ? parseFloat(v) : 0;
+};
+
+export const computeItemPrice = (
+  item: OrderItem,
+  rates: Record<Currency, number> | undefined,
+  targetCurrency: Currency,
+  units: number
+) => {
+  if (rates && item.ItemPrice?.Amount) {
+    const amount =
+      (((_parseFloat(item.ItemPrice?.Amount) +
+        _parseFloat(item.ItemTax?.Amount) +
+        _parseFloat(item.ShippingPrice?.Amount) +
+        _parseFloat(item.ShippingTax?.Amount) +
+        _parseFloat(item.BuyerInfo?.GiftWrapPrice?.Amount) +
+        _parseFloat(item.BuyerInfo?.GiftWrapTax?.Amount) -
+        _parseFloat(item.ShippingDiscount?.Amount) -
+        _parseFloat(item.ShippingDiscountTax?.Amount) -
+        _parseFloat(item.PromotionDiscount?.Amount) -
+        _parseFloat(item.PromotionDiscountTax?.Amount)) *
+        rates[targetCurrency]) /
+        rates[item.ItemPrice?.CurrencyCode as Currency]) *
+      units;
+
+    return amount;
+  }
+  return 0;
+};
+
+export const computeOrderedUnits = (item: OrderItem) => {
+  if (item.QuantityOrdered) {
+    return item.QuantityOrdered;
+  } else {
+    const numberOfItems: string | number | undefined =
+      item.ProductInfo?.NumberOfItems;
+
+    const units = numberOfItems
+      ? typeof numberOfItems === 'string'
+        ? parseInt(numberOfItems as string)
+        : numberOfItems
+      : 0;
+    return units;
+  }
+};
+
+export const computeSkuStats = (
+  orders: CustomOrder[] | undefined,
+  rates: Record<Currency, number> | undefined,
+  targetCurrency: Currency,
+  skus: string[]
+) => {
+  const stats = orders?.reduce((a, order) => {
+    order.OrderItems?.forEach((item) => {
+      if (
+        item.SellerSKU &&
+        (skus.length === 0 || skus.includes(item.SellerSKU))
+      ) {
+        if (!(item.SellerSKU in a)) {
+          a[item.SellerSKU] = {
+            sku: item.SellerSKU,
+            sales: 0,
+            orders: 0,
+            units: 0,
+          };
+        }
+        const units = computeOrderedUnits(item);
+        const price = computeItemPrice(item, rates, targetCurrency, units);
+
+        a[item.SellerSKU].units += units;
+        a[item.SellerSKU].sales += price;
+
+        a[item.SellerSKU].orders += 1;
+      }
+    });
+
+    return a;
+  }, {} as Record<string, Data>);
+
+  return stats ? stats : {};
+};
 
 export default function OrdersTable({
   orders,
   rates,
   targetCurrency,
+  skuFilters,
 }: OrdersTableProps) {
   const [order, setOrder] = React.useState<Order>('desc');
   const [orderBy, setOrderBy] = React.useState<keyof Data>('sales');
   const [selected, setSelected] = React.useState<readonly string[]>([]);
   const [page, setPage] = React.useState(0);
   const [dense] = React.useState(true);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [rowsPerPage, setRowsPerPage] = React.useState(50);
   const [rows, setRows] = React.useState<Data[]>([]);
 
   React.useEffect(() => {
-    if (orders && rates) {
-      const ordersT = orders.reduce((a, order) => {
-        order.OrderItems?.forEach((item) => {
-          if (item.SellerSKU) {
-            if (!(item.SellerSKU in a)) {
-              a[item.SellerSKU] = {
-                sku: item.SellerSKU,
-                sales: 0,
-                orders: 0,
-                units: 0,
-              };
-            }
-
-            a[item.SellerSKU].orders = a[item.SellerSKU].orders + 1;
-
-            const numberOfItems: string | number | undefined =
-              item.ProductInfo?.NumberOfItems;
-
-            const units = numberOfItems
-              ? typeof numberOfItems === 'string'
-                ? parseInt(numberOfItems as string)
-                : numberOfItems
-              : 0;
-            a[item.SellerSKU].units = a[item.SellerSKU].units + units;
-
-            if (item.ItemPrice) {
-              const compute = (v?: string) => {
-                return v ? parseFloat(v) : 0;
-              };
-
-              const amount =
-                (((compute(item.ItemPrice?.Amount) +
-                  compute(item.ItemTax?.Amount) +
-                  compute(item.ShippingPrice?.Amount) +
-                  compute(item.ShippingTax?.Amount) -
-                  compute(item.ShippingDiscount?.Amount) -
-                  compute(item.ShippingDiscountTax?.Amount) -
-                  compute(item.PromotionDiscount?.Amount) -
-                  compute(item.PromotionDiscountTax?.Amount)) *
-                  rates[targetCurrency]) /
-                  rates[item.ItemPrice?.CurrencyCode as Currency]) *
-                units;
-
-              a[item.SellerSKU].sales = a[item.SellerSKU].sales + amount;
-            }
-          }
-        });
-
-        return a;
-      }, {} as Record<string, Data>);
-
-      setRows(Object.values(ordersT));
+    if (orders && rates && skuFilters) {
+      const skus = getSkusFromSkuFilters(skuFilters);
+      const stats = computeSkuStats(orders, rates, targetCurrency, skus);
+      setRows(Object.values(stats));
     }
   }, [orders, rates]);
 
@@ -304,10 +364,18 @@ export default function OrdersTable({
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
+  const salesSum = rows.reduce((a, row) => {
+    return a + row.sales;
+  }, 0);
+
   return (
     <Box sx={{ width: '100%' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
-        <EnhancedTableToolbar numSelected={selected.length} />
+        <EnhancedTableToolbar
+          numSelected={selected.length}
+          salesSum={salesSum}
+          targetCurrency={targetCurrency}
+        />
         <TableContainer>
           <Table
             sx={{ minWidth: 750 }}
@@ -360,7 +428,7 @@ export default function OrdersTable({
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[10, 25, 50]}
           component="div"
           count={rows.length}
           rowsPerPage={rowsPerPage}

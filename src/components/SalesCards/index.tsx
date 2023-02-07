@@ -1,3 +1,8 @@
+import { FilterOption } from '@components/FilterGroup';
+import {
+  computeSkuStats,
+  getSkusFromSkuFilters,
+} from '@components/OrdersTable';
 import SalesCard, {
   computeOrdersSales,
   computeOrdersUnits,
@@ -26,6 +31,7 @@ export interface SalesCardsProps {
   dateRange: DateRange | null;
   rates?: Record<Currency, number>;
   targetCurrency: Currency;
+  skuFilters?: Record<string, FilterOption> | undefined;
 }
 
 export const SalesCards = ({
@@ -33,6 +39,7 @@ export const SalesCards = ({
   dateRange,
   rates,
   targetCurrency,
+  skuFilters,
 }: SalesCardsProps) => {
   const { orders: todayOrders } = useOrders(todayRange as UseOrderProps);
   const { orders: yesterdayOrders } = useOrders(
@@ -51,6 +58,7 @@ export const SalesCards = ({
     if (isMobile && dateRange)
       return [
         {
+          key: 'custom_range',
           headerLabel: `${formatDateLabel(dateRange[0])} - ${formatDateLabel(
             dateRange[1]
           )}`,
@@ -60,6 +68,7 @@ export const SalesCards = ({
     else if (!isMobile && dateRange)
       return [
         {
+          key: 'custom_range',
           headerLabel: `${formatDateLabel(dateRange[0])} - ${formatDateLabel(
             dateRange[1]
           )}`,
@@ -74,37 +83,80 @@ export const SalesCards = ({
 
   return (
     <SalesCardsContainer>
-      {rates && dateRange ? (
+      {orders && rates && dateRange ? (
         <>
-          {salesCards(isMobile)?.map(({ headerLabel, rangeOrders }) => {
-            return (
-              <SalesCard
-                key={headerLabel}
-                headerLabel={headerLabel}
-                salesCardItems={[
-                  {
-                    label: 'Sales',
-                    targetCurrency: targetCurrency,
-                    value: computeOrdersSales(
-                      rangeOrders,
-                      targetCurrency,
-                      rates
-                    ),
-                    icon: faMoneyCheckDollar,
-                  },
-                  {
-                    label: 'Orders',
-                    value: rangeOrders?.length || 0,
-                    icon: faDolly,
-                  },
-                  {
-                    label: 'Units',
-                    value: computeOrdersUnits(rangeOrders),
-                    icon: faCube,
-                  },
-                ]}
-              />
-            );
+          {salesCards(isMobile)?.map(({ key, headerLabel, rangeOrders }) => {
+            if (key === 'custom_range') {
+              const skus = getSkusFromSkuFilters(skuFilters);
+              const skuStats = computeSkuStats(
+                rangeOrders,
+                rates,
+                targetCurrency,
+                skus
+              );
+              const [sales, units] = Object.values(skuStats).reduce(
+                (a, skuStat) => {
+                  a[0] += skuStat.sales;
+                  a[1] += skuStat.units;
+                  return a;
+                },
+                [0, 0]
+              );
+
+              return (
+                <SalesCard
+                  key={headerLabel}
+                  headerLabel={headerLabel}
+                  salesCardItems={[
+                    {
+                      label: 'Sales',
+                      targetCurrency: targetCurrency,
+                      value: sales,
+                      icon: faMoneyCheckDollar,
+                    },
+                    {
+                      label: 'Orders',
+                      value: rangeOrders?.length || 0,
+                      icon: faDolly,
+                    },
+                    {
+                      label: 'Units',
+                      value: units,
+                      icon: faCube,
+                    },
+                  ]}
+                />
+              );
+            } else {
+              return (
+                <SalesCard
+                  key={headerLabel}
+                  headerLabel={headerLabel}
+                  salesCardItems={[
+                    {
+                      label: 'Sales',
+                      targetCurrency: targetCurrency,
+                      value: computeOrdersSales(
+                        rangeOrders,
+                        targetCurrency,
+                        rates
+                      ),
+                      icon: faMoneyCheckDollar,
+                    },
+                    {
+                      label: 'Orders',
+                      value: rangeOrders?.length || 0,
+                      icon: faDolly,
+                    },
+                    {
+                      label: 'Units',
+                      value: computeOrdersUnits(rangeOrders),
+                      icon: faCube,
+                    },
+                  ]}
+                />
+              );
+            }
           })}
         </>
       ) : (
