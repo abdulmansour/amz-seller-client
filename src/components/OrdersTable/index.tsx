@@ -18,6 +18,7 @@ import { CustomOrder } from '@pages/index';
 import { OrderItem } from '@sp-api-sdk/orders-api-v0';
 import currency from 'currency.js';
 import * as React from 'react';
+import { ChangeEvent, memo, useEffect, useState } from 'react';
 import { TableCellCurrency } from './styled';
 
 export interface Data {
@@ -111,7 +112,7 @@ interface EnhancedTableProps {
     event: React.MouseEvent<unknown>,
     property: keyof Data
   ) => void;
-  onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onSelectAllClick: (event: ChangeEvent<HTMLInputElement>) => void;
   order: Order;
   orderBy: string;
   rowCount: number;
@@ -230,13 +231,13 @@ export const _parseFloat = (v?: string) => {
 
 export const computeItemPrice = (
   item: OrderItem,
-  rates: Record<Currency, number> | undefined,
-  targetCurrency: Currency,
-  units: number
+  units: number,
+  rates?: Record<Currency, number> | undefined,
+  targetCurrency?: Currency
 ) => {
-  if (rates && item.ItemPrice?.Amount) {
+  if (item.ItemPrice?.Amount) {
     const amount =
-      (((_parseFloat(item.ItemPrice?.Amount) +
+      (_parseFloat(item.ItemPrice?.Amount) +
         _parseFloat(item.ItemTax?.Amount) +
         _parseFloat(item.ShippingPrice?.Amount) +
         _parseFloat(item.ShippingTax?.Amount) +
@@ -246,9 +247,14 @@ export const computeItemPrice = (
         _parseFloat(item.ShippingDiscountTax?.Amount) -
         _parseFloat(item.PromotionDiscount?.Amount) -
         _parseFloat(item.PromotionDiscountTax?.Amount)) *
-        rates[targetCurrency]) /
-        rates[item.ItemPrice?.CurrencyCode as Currency]) *
       units;
+
+    if (rates && targetCurrency) {
+      const adjustedAmount =
+        (amount * rates[targetCurrency]) /
+        rates[item.ItemPrice?.CurrencyCode as Currency];
+      return adjustedAmount;
+    }
 
     return amount;
   }
@@ -292,7 +298,7 @@ export const computeSkuStats = (
           };
         }
         const units = computeOrderedUnits(item);
-        const price = computeItemPrice(item, rates, targetCurrency, units);
+        const price = computeItemPrice(item, units, rates, targetCurrency);
 
         a[item.SellerSKU].units += units;
         a[item.SellerSKU].sales += price;
@@ -307,21 +313,21 @@ export const computeSkuStats = (
   return stats ? stats : {};
 };
 
-export default function OrdersTable({
+const OrdersTable = ({
   orders,
   rates,
   targetCurrency,
   skuFilters,
-}: OrdersTableProps) {
-  const [order, setOrder] = React.useState<Order>('desc');
-  const [orderBy, setOrderBy] = React.useState<keyof Data>('sales');
-  const [selected, setSelected] = React.useState<readonly string[]>([]);
-  const [page, setPage] = React.useState(0);
-  const [dense] = React.useState(true);
-  const [rowsPerPage, setRowsPerPage] = React.useState(50);
-  const [rows, setRows] = React.useState<Data[]>([]);
+}: OrdersTableProps) => {
+  const [order, setOrder] = useState<Order>('desc');
+  const [orderBy, setOrderBy] = useState<keyof Data>('sales');
+  const [selected, setSelected] = useState<readonly string[]>([]);
+  const [page, setPage] = useState(0);
+  const [dense] = useState(true);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
+  const [rows, setRows] = useState<Data[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (orders && rates && skuFilters) {
       const skus = getSkusFromSkuFilters(skuFilters);
       const stats = computeSkuStats(orders, rates, targetCurrency, skus);
@@ -338,7 +344,7 @@ export default function OrdersTable({
     setOrderBy(property);
   };
 
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSelectAllClick = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       const newSelected = rows.map((n) => n.sku);
       setSelected(newSelected);
@@ -351,9 +357,7 @@ export default function OrdersTable({
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -439,4 +443,6 @@ export default function OrdersTable({
       </Paper>
     </Box>
   );
-}
+};
+
+export default memo(OrdersTable);

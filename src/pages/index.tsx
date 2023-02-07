@@ -1,5 +1,4 @@
 import FilterGroup, { FilterOption } from '@components/FilterGroup';
-import { LoadingSpinner } from '@components/LoadingSpinner';
 import MapOrders from '@components/MapOrders';
 import OrdersTable from '@components/OrdersTable';
 import { Currency } from '@components/SalesCard';
@@ -45,6 +44,7 @@ export interface CustomOrder extends Order {
   };
   OrderItems?: OrderItem[];
   displayMarker?: boolean;
+  ref?: React.RefObject<HTMLDivElement>;
 }
 
 export interface HomePageProps {
@@ -81,9 +81,8 @@ const HomePage = () => {
   ]);
 
   const [startDate, endDate] = [dateRange?.[0], dateRange?.[1]];
-  const { orders, isOrdersLoading } = useOrders({ startDate, endDate });
+  const { orders } = useOrders({ startDate, endDate });
 
-  const [isLoading, setLoading] = useState<boolean>(false);
   const [filteredOrders, setFilteredOrders] = useState<
     CustomOrder[] | undefined
   >([]);
@@ -95,16 +94,11 @@ const HomePage = () => {
   const [isMobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    setLoading(isOrdersLoading);
-  }, [isOrdersLoading]);
-
-  useEffect(() => {
     greedyPollOrders();
   }, []);
 
   // when orders change, recompute filters and reinitialize filteredOrders
   useEffect(() => {
-    setLoading(true);
     const _marketplaceMap: Record<string, FilterOption> = {};
     orders?.forEach((order) => {
       if (order.MarketplaceId) {
@@ -173,7 +167,6 @@ const HomePage = () => {
     };
 
     setFilters(_filters);
-    setLoading(false);
   }, [orders]);
 
   // when filters are initialized and when filter option is selected: generate filteredOrders
@@ -226,7 +219,6 @@ const HomePage = () => {
         }
       });
       setFilteredOrders(_orders);
-      setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
@@ -237,7 +229,6 @@ const HomePage = () => {
     options: Record<string, FilterOption>
   ) => {
     if (filters && orders) {
-      setLoading(true);
       const _filters = { ...filters, [label]: options };
       setFilters(computeFiltersCount(_filters));
     }
@@ -423,8 +414,6 @@ const HomePage = () => {
         targetCurrency={targetCurrency}
         skuFilters={filters?.SKU}
       />
-
-      <LoadingSpinner loading={isLoading ? 1 : 0} />
     </HomePageContainer>
   );
 };

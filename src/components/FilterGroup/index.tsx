@@ -1,6 +1,6 @@
 import Checkbox from '@mui/material/Checkbox';
 import { FilterLabels } from '@pages/index';
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, memo, useEffect, useState } from 'react';
 import {
   FilterContainer,
   FilterFormControl,
@@ -28,11 +28,11 @@ export interface FilterGroupProps {
   ) => void;
 }
 
-export default function FilterGroup({
+const FilterGroup = ({
   filterLabel,
   filterOptions,
   handleFilterChange,
-}: FilterGroupProps) {
+}: FilterGroupProps) => {
   const [options, setOptions] = useState(filterOptions);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -88,4 +88,6 @@ export default function FilterGroup({
       </FilterFormControl>
     </FilterContainer>
   );
-}
+};
+
+export default memo(FilterGroup);

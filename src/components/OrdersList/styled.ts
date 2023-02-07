@@ -93,3 +93,11 @@ export const OrdersListEmptyMessage = styled(Box)`
   justify-content: center;
   align-items: center;
 `;
+
+export const OrderItemFooter = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'end',
+  fontSize: '12px',
+  color: theme.palette.grey[600],
+}));

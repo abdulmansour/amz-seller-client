@@ -136,7 +136,6 @@ const invalidateCaches = async () => {
 
 export const useOrders = ({ startDate, endDate }: UseOrderProps) => {
   const [orders, setOrders] = useState<CustomOrder[]>();
-  const [isLoading, setLoading] = useState<boolean>(false);
 
   const fetchOrders = async (
     startDate: Date | null | undefined,
@@ -172,13 +171,9 @@ export const useOrders = ({ startDate, endDate }: UseOrderProps) => {
 
   useEffect(() => {
     const getOrders = async () => {
-      setLoading(true);
-
       await invalidateCaches();
       const filteredOrders = await fetchOrders(startDate, endDate);
       setOrders(filteredOrders);
-
-      setLoading(false);
     };
 
     getOrders();
@@ -186,6 +181,5 @@ export const useOrders = ({ startDate, endDate }: UseOrderProps) => {
 
   return {
     orders: orders,
-    isOrdersLoading: isLoading,
   };
 };

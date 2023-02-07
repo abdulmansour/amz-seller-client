@@ -1,4 +1,24 @@
+import dateFormat from 'dateformat';
 import { DateRange, ValueType } from 'rsuite/esm/DateRangePicker';
+
+export const getDateToString = (str: string) => {
+  const date = new Date(str);
+  return dateFormat(date, 'dddd, mmmm dS, yyyy, h:MM:ss TT');
+};
+
+export function formatDateLongWithTime(date: Date): string {
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    timeZoneName: 'short',
+  };
+  return date.toLocaleDateString('en-US', options);
+}
 
 export function subDays(date: Date, days: number): Date {
   return new Date(date.getTime() - days * 24 * 60 * 60 * 1000);
