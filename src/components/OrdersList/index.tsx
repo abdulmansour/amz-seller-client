@@ -1,7 +1,7 @@
 import OrderItem from '@components/OrdersList/OrderItem';
 import { Typography } from '@mui/material';
 import { CustomOrder } from '@pages/index';
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import SearchBar from '../SearchBar';
 import {
   OrdersItemsContainer,
@@ -41,32 +41,11 @@ const OrdersList = ({
     setFilteredOrders(_filteredOrders);
   };
 
-  const sliceOrdersSize = 1000;
+  const sliceOrdersSize = 1_000;
 
-  const [memOrders, refs] = useMemo(() => {
-    const refs: Record<string, React.RefObject<HTMLDivElement>> = {};
-    return [
-      orders?.map((order) => {
-        order.ref = React.createRef<HTMLDivElement>();
-        refs[order.AmazonOrderId] = order.ref;
-        return order;
-      }),
-      refs,
-    ];
+  useEffect(() => {
+    setFilteredOrders(orders);
   }, [orders]);
-
-  useEffect(() => {
-    setFilteredOrders(memOrders);
-  }, [memOrders]);
-
-  useEffect(() => {
-    if (selectedOrder) {
-      refs[selectedOrder.AmazonOrderId]?.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-      });
-    }
-  }, [selectedOrder]);
 
   return (
     <OrdersListContainer>
