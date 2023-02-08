@@ -116,21 +116,15 @@ export const invalidateCache = async (
 const invalidateCaches = async () => {
   await invalidateCache(
     getFilenameByMoment(moment()),
-    CeilTo.WEEK,
+    CeilTo.HOUR,
     'gcs-json-gz',
     `/api/gcs-json-gz?fileName=${getFilenameByMoment(moment())}`
   );
   await invalidateCache(
     getFilenameByMoment(moment(), 1),
-    CeilTo.WEEK,
-    'gcs-json-gz',
-    `/api/gcs-json-gz?fileName=${getFilenameByMoment(moment(), 1)}`
-  );
-  await invalidateCache(
-    'orders_21d.json.gz',
     CeilTo.HOUR,
     'gcs-json-gz',
-    '/api/gcs-json-gz?fileName=orders_21d.json.gz'
+    `/api/gcs-json-gz?fileName=${getFilenameByMoment(moment(), 1)}`
   );
 };
 
@@ -141,20 +135,15 @@ export const useOrders = ({ startDate, endDate }: UseOrderProps) => {
     startDate: Date | null | undefined,
     endDate: Date | null | undefined
   ) => {
-    const orders = await getOrdersByDateRange(startDate, endDate);
-    const orders21d: Record<string, CustomOrder> = await fetch(
-      '/api/gcs-json-gz?fileName=orders_21d.json.gz'
-    ).then((res) => res.json());
+    const orders: Record<string, CustomOrder> = await getOrdersByDateRange(
+      startDate,
+      endDate
+    );
 
-    const ordersObj: Record<string, CustomOrder> = {
-      ...orders,
-      ...orders21d,
-    };
-
-    if (startDate && endDate && ordersObj) {
-      const filteredOrders: CustomOrder[] = Object.keys(ordersObj).reduce(
+    if (startDate && endDate && orders) {
+      const filteredOrders: CustomOrder[] = Object.keys(orders).reduce(
         (acc, orderId) => {
-          const order = ordersObj[orderId];
+          const order = orders[orderId];
           if (order?.PurchaseDate) {
             const purchaseDate = new Date(order.PurchaseDate);
             if (purchaseDate >= startDate && purchaseDate <= endDate)
