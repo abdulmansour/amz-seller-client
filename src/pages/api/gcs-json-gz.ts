@@ -46,7 +46,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     .catch((e: Error) => {
       // eslint-disable-next-line no-console
       console.error(e);
-      res.send({});
+      res.status(500).send({ error: 'failed to fetch data' });
     });
 };
 

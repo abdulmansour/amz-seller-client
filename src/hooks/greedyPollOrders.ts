@@ -1,8 +1,14 @@
 import { getOrdersByDateRange } from './orders';
 
 export const greedyPollOrders = () => {
+  const forceGreedyPoll = process.env.NEXT_PUBLIC_GREEDY_POLL_FORCE as string;
   const greedyPollCompleted = localStorage.getItem('greedyPollCompleted');
-  if (!greedyPollCompleted || greedyPollCompleted !== 'true') {
+
+  if (
+    forceGreedyPoll === 'true' ||
+    !greedyPollCompleted ||
+    greedyPollCompleted !== 'true'
+  ) {
     setTimeout(() => {
       navigator.serviceWorker.getRegistration().then((registration) => {
         if (registration?.active?.state === 'activated') {
