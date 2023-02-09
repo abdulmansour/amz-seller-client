@@ -57,11 +57,21 @@ const getFiles = (sDate: moment.Moment, eDate: moment.Moment) => {
     eDate = moment();
   }
 
-  while (sDate.isBefore(eDate)) {
-    result.push(getFilenameByMoment(sDate));
-    sDate.add(1, 'month');
+  while (true) {
+    if (sDate.isBefore(eDate)) {
+      result.push(getFilenameByMoment(sDate));
+      sDate.add(1, 'month');
+    }
+
+    if (sDate.isAfter(eDate)) {
+      if (sDate.month() === eDate.month()) {
+        if (!result.some((r) => r === getFilenameByMoment(sDate)))
+          result.push(getFilenameByMoment(sDate));
+      }
+      break;
+    }
   }
-  if (eDate.month() > sDate.month()) result.push(getFilenameByMoment(sDate));
+
   return result;
 };
 
@@ -141,13 +151,16 @@ export const useOrders = ({ startDate, endDate }: UseOrderProps) => {
     );
 
     if (startDate && endDate && orders) {
+      const mStartDate = moment(startDate);
+      const mEndDate = moment(endDate);
       const filteredOrders: CustomOrder[] = Object.keys(orders).reduce(
         (acc, orderId) => {
           const order = orders[orderId];
           if (order?.PurchaseDate) {
             const purchaseDate = new Date(order.PurchaseDate);
-            if (purchaseDate >= startDate && purchaseDate <= endDate)
+            if (moment(purchaseDate).isBetween(mStartDate, mEndDate)) {
               acc.push(order);
+            }
           }
           return acc;
         },
