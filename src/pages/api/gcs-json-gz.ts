@@ -1,8 +1,6 @@
 import { Storage } from '@google-cloud/storage';
 import fs from 'fs';
 import { NextApiRequest, NextApiResponse } from 'next';
-import path from 'path';
-import { cwd } from 'process';
 
 const downloadFile = async (
   storage: Storage,
@@ -28,23 +26,20 @@ const downloadFile = async (
 };
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  const { privateKey } = JSON.parse(
-    process.env.GCS_PRIVATE_KEY || '{ privateKey: null }'
-  );
   const bucketName = process.env.GCS_BUCKET_NAME as string;
   const fileName = req?.query?.fileName as string;
   const storage = new Storage({
     projectId: process.env.GCS_PROJECT_ID,
     credentials: {
       client_email: process.env.GCS_CLIENT_EMAIL,
-      private_key: privateKey,
+      private_key: process.env.GCS_PRIVATE_KEY,
     },
   });
 
-  await downloadFile(storage, bucketName, fileName, path.join(cwd(), fileName))
+  await downloadFile(storage, bucketName, fileName, `/tmp/${fileName}`)
     .then(() => {
-      const file = fs.readFileSync(fileName);
-      fs.unlink(path.join(cwd(), fileName), () => null);
+      const file = fs.readFileSync(`/tmp/${fileName}`);
+      fs.unlink(`/tmp/${fileName}`, () => null);
 
       res.setHeader('Content-Encoding', 'gzip');
       res.setHeader('Content-Type', ' application/json');
