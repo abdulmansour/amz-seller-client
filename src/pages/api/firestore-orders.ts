@@ -1,8 +1,7 @@
 import admin from 'firebase-admin';
-import { cert, initializeApp, ServiceAccount } from 'firebase-admin/app';
+import { cert, initializeApp } from 'firebase-admin/app';
 import { DocumentData, getFirestore } from 'firebase-admin/firestore';
 import { NextApiRequest, NextApiResponse } from 'next';
-import serviceAccount from 'utils/service_account_firestore.json';
 import { CustomOrder } from '..';
 
 const setToSunday = (date: Date) => {
@@ -20,8 +19,12 @@ const goBack21Days = (date: Date) => {
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (admin.apps.length === 0)
     initializeApp({
-      credential: cert(serviceAccount as ServiceAccount),
-      databaseURL: 'https://molgha.firebaseio.com',
+      credential: cert({
+        projectId: process.env.FIRESTORE_PROJECT_ID,
+        clientEmail: process.env.FIRESTORE_CLIENT_EMAIL,
+        privateKey: process.env.FIRESTORE_PRIVATE_KEY,
+      }),
+      databaseURL: process.env.FIRESTORE_DB_URL,
     });
 
   const db = getFirestore();

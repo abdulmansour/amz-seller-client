@@ -28,10 +28,14 @@ const downloadFile = async (
 };
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  const bucketName = 'molgha';
+  const bucketName = process.env.GCS_BUCKET_NAME as string;
   const fileName = req?.query?.fileName as string;
   const storage = new Storage({
-    keyFilename: 'utils/service_account_gcs.json',
+    projectId: process.env.GCS_PROJECT_ID,
+    credentials: {
+      client_email: process.env.GCS_CLIENT_EMAIL,
+      private_key: process.env.GCS_PRIVATE_KEY,
+    },
   });
 
   await downloadFile(storage, bucketName, fileName, path.join(cwd(), fileName))
