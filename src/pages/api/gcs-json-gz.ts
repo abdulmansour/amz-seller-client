@@ -34,9 +34,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     projectId: process.env.GCS_PROJECT_ID,
     credentials: {
       client_email: process.env.GCS_CLIENT_EMAIL,
-      private_key: (process.env.GCS_PRIVATE_KEY as string)
-        .split(String.raw`\n`)
-        .join('\n'),
+      private_key: atob(process.env.GCS_PRIVATE_KEY as string),
     },
   });
 
