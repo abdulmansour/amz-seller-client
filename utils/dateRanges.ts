@@ -75,8 +75,16 @@ export const setToStartOfDate = (date: Date): Date => {
 };
 
 export const setToEndOfDate = (date: Date) => {
-  date.setUTCHours(23, 59, 59, 59);
-  return date;
+  const d = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    23,
+    59,
+    59,
+    999
+  );
+  return d;
 };
 
 export const todayRange = {
