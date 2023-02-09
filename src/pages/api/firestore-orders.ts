@@ -22,7 +22,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       credential: cert({
         projectId: process.env.FIRESTORE_PROJECT_ID,
         clientEmail: process.env.FIRESTORE_CLIENT_EMAIL,
-        privateKey: atob(process.env.FIRESTORE_PRIVATE_KEY as string),
+        privateKey: process.env.FIRESTORE_PRIVATE_KEY,
       }),
       databaseURL: process.env.FIRESTORE_DB_URL,
     });
