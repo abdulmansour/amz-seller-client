@@ -17,12 +17,16 @@ const goBack21Days = (date: Date) => {
 };
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+  const { privateKey } = JSON.parse(
+    process.env.FIRESTORE_PRIVATE_KEY || '{ privateKey: null }'
+  );
+
   if (admin.apps.length === 0)
     initializeApp({
       credential: cert({
         projectId: process.env.FIRESTORE_PROJECT_ID,
         clientEmail: process.env.FIRESTORE_CLIENT_EMAIL,
-        privateKey: process.env.FIRESTORE_PRIVATE_KEY,
+        privateKey: privateKey,
       }),
       databaseURL: process.env.FIRESTORE_DB_URL,
     });
