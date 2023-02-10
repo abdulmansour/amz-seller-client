@@ -13,7 +13,7 @@ import {
   faDolly,
   faMoneyCheckDollar,
 } from '@fortawesome/free-solid-svg-icons';
-import { UseOrderProps, useOrders } from '@hooks/orders';
+import { useOrders } from '@hooks/useOrders';
 import { CircularProgress, useMediaQuery } from '@mui/material';
 import { CustomOrder } from '@pages/index';
 import {
@@ -23,6 +23,7 @@ import {
   todayRange,
   yesterdayRange,
 } from '@utils/dateRanges';
+import { memo } from 'react';
 import { DateRange } from 'rsuite/esm/DateRangePicker';
 import { SalesCardsContainer } from './styled';
 
@@ -34,23 +35,17 @@ export interface SalesCardsProps {
   skuFilters?: Record<string, FilterOption> | undefined;
 }
 
-export const SalesCards = ({
+const SalesCards = ({
   orders,
   dateRange,
   rates,
   targetCurrency,
   skuFilters,
 }: SalesCardsProps) => {
-  const { orders: todayOrders } = useOrders(todayRange as UseOrderProps);
-  const { orders: yesterdayOrders } = useOrders(
-    yesterdayRange as UseOrderProps
-  );
-  const { orders: last7DaysOrders } = useOrders(
-    last7DaysRange as UseOrderProps
-  );
-  const { orders: last30DaysOrders } = useOrders(
-    last30daysRange as UseOrderProps
-  );
+  const { orders: todayOrders } = useOrders(todayRange);
+  const { orders: yesterdayOrders } = useOrders(yesterdayRange);
+  const { orders: last7DaysOrders } = useOrders(last7DaysRange);
+  const { orders: last30DaysOrders } = useOrders(last30daysRange);
 
   const isMobile = useMediaQuery('(max-width:900px)');
 
@@ -165,3 +160,5 @@ export const SalesCards = ({
     </SalesCardsContainer>
   );
 };
+
+export default memo(SalesCards);

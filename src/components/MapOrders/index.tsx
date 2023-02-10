@@ -93,10 +93,11 @@ const MapOrders = ({
       markers: CustomOrder[] | undefined,
       clusterer: Clusterer | MarkerClusterer | undefined
     ) => {
-      return markers?.map((order) => {
+      return markers?.map((order, index) => {
         if (display(order))
           return (
             <CustomMarker
+              key={index}
               order={order}
               clusterer={clusterer}
               isSelectedOrder={

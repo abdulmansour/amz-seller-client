@@ -1,13 +1,14 @@
 import FilterGroup, { FilterOption } from '@components/FilterGroup';
+import { LoadingSpinner } from '@components/LoadingSpinner';
 import MapOrders from '@components/MapOrders';
 import OrdersTable from '@components/OrdersTable';
 import { Currency } from '@components/SalesCard';
-import { SalesCards } from '@components/SalesCards';
+import SalesCards from '@components/SalesCards';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { greedyPollOrders } from '@hooks/greedyPollOrders';
-import { useOrders } from '@hooks/orders';
 import { useForex } from '@hooks/useForex';
+import { useGreedyPollOrders } from '@hooks/useGreedyPollOrders';
+import { OrdersData, useOrders } from '@hooks/useOrders';
 import {
   FiltersContainer,
   FiltersRow,
@@ -17,6 +18,7 @@ import {
   MobileFiltersContainer,
   MobileFiltersXContainer,
 } from '@layout/HomePage/styled';
+import Navbar from '@layout/NavBar';
 import {
   Button,
   IconButton,
@@ -32,10 +34,11 @@ import {
   setToStartOfDate,
   subDays,
 } from '@utils/dateRanges';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { DateRangePicker } from 'rsuite';
 import 'rsuite/dist/rsuite.min.css';
 import { DateRange } from 'rsuite/esm/DateRangePicker';
+import { AuthContext } from 'src/contexts/AuthContext';
 
 export interface CustomOrder extends Order {
   ShippingAddressGeoLocation?: {
@@ -75,122 +78,60 @@ const HomePage = () => {
   const currencies = [Currency.CAD, Currency.MXN];
   const { rates } = useForex(baseRateCurrency, currencies);
 
-  const [dateRange, setDateRange] = useState<DateRange | null>([
-    setToStartOfDate(subDays(new Date(), 6)),
-    new Date(),
-  ]);
-
-  const [startDate, endDate] = [dateRange?.[0], dateRange?.[1]];
-  const { orders } = useOrders({ startDate, endDate });
-
-  const [filteredOrders, setFilteredOrders] = useState<
-    CustomOrder[] | undefined
-  >([]);
-  const [filters, setFilters] =
-    useState<Record<FilterLabels, Record<string, FilterOption> | undefined>>();
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isMobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
 
+  const { user } = useContext(AuthContext);
+
+  const [dateRange, setDateRange] = useState<DateRange>([
+    setToStartOfDate(subDays(new Date(), 6)),
+    new Date(),
+  ]);
+  const { orders: initialOrders, filters: initialFilters } =
+    useOrders(dateRange);
+  const [filteredData, setFilteredData] = useState<OrdersData>({
+    orders: undefined,
+    filters: undefined,
+  });
+
+  const { orders, filters } = filteredData;
+
   useEffect(() => {
-    greedyPollOrders();
-  }, []);
+    setFilteredData({ orders: initialOrders, filters: initialFilters });
+  }, [initialOrders, initialFilters]);
 
-  // when orders change, recompute filters and reinitialize filteredOrders
-  useEffect(() => {
-    const _marketplaceMap: Record<string, FilterOption> = {};
-    orders?.forEach((order) => {
-      if (order.MarketplaceId) {
-        if (!(order.MarketplaceId in _marketplaceMap)) {
-          _marketplaceMap[order.MarketplaceId] = {
-            label: martketplaceIdToCountry(order.MarketplaceId) || 'None',
-            value: order.MarketplaceId,
-            selected: false,
-            count: 1,
-          };
-        } else {
-          _marketplaceMap[order.MarketplaceId] = {
-            ..._marketplaceMap[order.MarketplaceId],
-            count: (_marketplaceMap[order.MarketplaceId].count as number) + 1,
-          };
-        }
-      }
-    });
-
-    const _statusMap: Record<string, FilterOption> = {};
-    orders?.forEach((order) => {
-      if (order.OrderStatus) {
-        if (!(order.OrderStatus in _statusMap)) {
-          _statusMap[order.OrderStatus] = {
-            label: order.OrderStatus,
-            value: order.OrderStatus,
-            selected: false,
-            count: 1,
-          };
-        } else {
-          _statusMap[order.OrderStatus] = {
-            ..._statusMap[order.OrderStatus],
-            count: (_statusMap[order.OrderStatus].count as number) + 1,
-          };
-        }
-      }
-    });
-
-    const _skuMap: Record<string, FilterOption> = {};
-    orders?.forEach((order) => {
-      if (order.OrderItems) {
-        order.OrderItems.forEach((item) => {
-          if (item.SellerSKU) {
-            if (!(item.SellerSKU in _skuMap)) {
-              _skuMap[item.SellerSKU] = {
-                label: item.SellerSKU,
-                value: item.SellerSKU,
-                selected: false,
-                count: 1,
-              };
-            } else {
-              _skuMap[item.SellerSKU] = {
-                ..._skuMap[item.SellerSKU],
-                count: (_skuMap[item.SellerSKU].count as number) + 1,
-              };
-            }
-          }
-        });
-      }
-    });
-
-    const _filters = {
-      [FilterLabels.MARKETPLACE]: _marketplaceMap,
-      [FilterLabels.ORDER_STATUS]: _statusMap,
-      [FilterLabels.SKU]: _skuMap,
+  // when filter is selected: update filters with updated selection/counts
+  const handleFilterChange = (
+    label: FilterLabels,
+    options: Record<string, FilterOption>
+  ) => {
+    const _filters = { ...filters, [label]: options } as {
+      SKU: Record<string, FilterOption> | undefined;
+      Status: Record<string, FilterOption> | undefined;
+      Marketplace: Record<string, FilterOption> | undefined;
     };
 
-    setFilters(_filters);
-  }, [orders]);
-
-  // when filters are initialized and when filter option is selected: generate filteredOrders
-  useEffect(() => {
     if (
-      filters?.[FilterLabels.MARKETPLACE] &&
-      filters?.[FilterLabels.ORDER_STATUS] &&
-      filters?.[FilterLabels.SKU]
+      _filters?.[FilterLabels.MARKETPLACE] &&
+      _filters?.[FilterLabels.ORDER_STATUS] &&
+      _filters?.[FilterLabels.SKU]
     ) {
       const marketplaceValues = Object.values(
-        filters[FilterLabels.MARKETPLACE]
+        _filters[FilterLabels.MARKETPLACE]
       ).reduce((a, option) => {
         if (option.selected) a.push(option.value);
         return a;
       }, [] as string[]);
 
       const statusValues = Object.values(
-        filters?.[FilterLabels.ORDER_STATUS]
+        _filters?.[FilterLabels.ORDER_STATUS]
       )?.reduce((a, option) => {
         if (option.selected) a.push(option.value);
         return a;
       }, [] as string[]);
 
-      const skuValues = Object.values(filters?.[FilterLabels.SKU])?.reduce(
+      const skuValues = Object.values(_filters?.[FilterLabels.SKU])?.reduce(
         (a, option) => {
           if (option.selected) a.push(option.value);
           return a;
@@ -198,7 +139,7 @@ const HomePage = () => {
         [] as string[]
       );
 
-      const _orders = orders?.filter((order) => {
+      const _orders = initialOrders?.filter((order) => {
         if (marketplaceValues && statusValues && skuValues) {
           const orderSkus = order.OrderItems?.map((item) => {
             return item.SellerSKU;
@@ -218,26 +159,17 @@ const HomePage = () => {
           }
         }
       });
-      setFilteredOrders(_orders);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
-
-  // when filter is selected: update filters with updated selection/counts
-  const handleFilterChange = (
-    label: FilterLabels,
-    options: Record<string, FilterOption>
-  ) => {
-    if (filters && orders) {
-      const _filters = { ...filters, [label]: options };
-      setFilters(computeFiltersCount(_filters));
+      setFilteredData({
+        orders: _orders,
+        filters: computeFiltersCount(_filters),
+      });
     }
   };
 
   const computeFiltersCount = (
     _filters: Record<FilterLabels, Record<string, FilterOption> | undefined>
   ) => {
-    if (orders) {
+    if (initialOrders) {
       const selectedOptionsMap: Record<FilterLabels, string[]> = {} as Record<
         FilterLabels,
         string[]
@@ -269,7 +201,7 @@ const HomePage = () => {
               [filterKey]: [optionValue.value],
             };
 
-            const count = orders.reduce((a, order) => {
+            const count = initialOrders.reduce((a, order) => {
               const orderSkus = order.OrderItems?.map((item) => {
                 return item.SellerSKU;
               });
@@ -303,118 +235,126 @@ const HomePage = () => {
     return _filters;
   };
 
-  return (
-    <HomePageContainer>
-      <SalesCards
-        orders={filteredOrders}
-        dateRange={dateRange}
-        rates={rates}
-        targetCurrency={targetCurrency}
-        skuFilters={filters?.SKU}
-      />
-      <MainContainer elevation={3}>
-        {!isMobile && (
-          <FiltersContainer>
-            {filters &&
-              Object.keys(filters).map((key) => {
-                return (
-                  <FilterGroup
-                    key={key}
-                    filterLabel={key}
-                    filterOptions={
-                      filters[key as FilterLabels] as Record<
-                        string,
-                        FilterOption
-                      >
-                    }
-                    handleFilterChange={handleFilterChange}
-                  />
-                );
-              })}
-          </FiltersContainer>
-        )}
-        {isMobile && (
-          <MobileFiltersContainer open={isMobileFiltersOpen}>
-            <FiltersContainer>
-              <MobileFiltersXContainer>
-                <Typography sx={{ fontWeight: 600, fontSize: '18px' }}>
-                  Filters
-                </Typography>
-                <IconButton
-                  onClick={() =>
-                    setMobileFiltersOpen(isMobileFiltersOpen ? false : true)
-                  }
-                >
-                  <FontAwesomeIcon icon={faXmark} />
-                </IconButton>
-              </MobileFiltersXContainer>
-              {filters &&
-                Object.keys(filters).map((key) => {
-                  return (
-                    <FilterGroup
-                      key={key}
-                      filterLabel={key}
-                      filterOptions={
-                        filters[key as FilterLabels] as Record<
-                          string,
-                          FilterOption
-                        >
-                      }
-                      handleFilterChange={handleFilterChange}
-                    />
-                  );
-                })}
-            </FiltersContainer>
-          </MobileFiltersContainer>
-        )}
-        <MapSectionContainer>
-          <FiltersRow>
-            <DateRangePicker
-              renderValue={([startDate, endDate]) => {
-                return `${formatDateLabel(startDate)} - ${formatDateLabel(
-                  endDate
-                )}`;
-              }}
-              showOneCalendar
-              ranges={predefinedRanges}
-              placeholder="Select date range"
-              value={dateRange}
-              onChange={(update) => {
-                if (update) {
-                  const _dateRange: DateRange = [
-                    setToStartOfDate(update[0]),
-                    setToEndOfDate(update[1]),
-                  ];
-                  setDateRange(_dateRange);
-                }
-              }}
-            />
-            {isMobile && (
-              <Button
-                onClick={() =>
-                  setMobileFiltersOpen(isMobileFiltersOpen ? false : true)
-                }
-              >
-                Filters
-              </Button>
-            )}
-            {/* <FilterChips /> */}
-          </FiltersRow>
-          <MapOrders
-            orders={filteredOrders as CustomOrder[]}
-            clusterize={false}
-            clusterSize={5}
-          />
-        </MapSectionContainer>
-      </MainContainer>
+  useGreedyPollOrders();
 
-      <OrdersTable
-        orders={filteredOrders}
-        rates={rates}
-        targetCurrency={targetCurrency}
-        skuFilters={filters?.SKU}
-      />
-    </HomePageContainer>
+  return (
+    <>
+      {user && (
+        <HomePageContainer>
+          <Navbar />
+          <SalesCards
+            orders={orders}
+            dateRange={dateRange}
+            rates={rates}
+            targetCurrency={targetCurrency}
+            skuFilters={filters?.SKU}
+          />
+          <MainContainer elevation={3}>
+            {!isMobile && (
+              <FiltersContainer>
+                {filters &&
+                  Object.keys(filters).map((key) => {
+                    return (
+                      <FilterGroup
+                        key={key}
+                        filterLabel={key}
+                        filterOptions={
+                          filters[key as FilterLabels] as Record<
+                            string,
+                            FilterOption
+                          >
+                        }
+                        handleFilterChange={handleFilterChange}
+                      />
+                    );
+                  })}
+              </FiltersContainer>
+            )}
+            {isMobile && (
+              <MobileFiltersContainer open={isMobileFiltersOpen}>
+                <FiltersContainer>
+                  <MobileFiltersXContainer>
+                    <Typography sx={{ fontWeight: 600, fontSize: '18px' }}>
+                      Filters
+                    </Typography>
+                    <IconButton
+                      onClick={() =>
+                        setMobileFiltersOpen(isMobileFiltersOpen ? false : true)
+                      }
+                    >
+                      <FontAwesomeIcon icon={faXmark} />
+                    </IconButton>
+                  </MobileFiltersXContainer>
+                  {filters &&
+                    Object.keys(filters).map((key) => {
+                      return (
+                        <FilterGroup
+                          key={key}
+                          filterLabel={key}
+                          filterOptions={
+                            filters[key as FilterLabels] as Record<
+                              string,
+                              FilterOption
+                            >
+                          }
+                          handleFilterChange={handleFilterChange}
+                        />
+                      );
+                    })}
+                </FiltersContainer>
+              </MobileFiltersContainer>
+            )}
+            <MapSectionContainer>
+              <FiltersRow>
+                <DateRangePicker
+                  renderValue={([startDate, endDate]) => {
+                    return `${formatDateLabel(startDate)} - ${formatDateLabel(
+                      endDate
+                    )}`;
+                  }}
+                  showOneCalendar
+                  ranges={predefinedRanges}
+                  placeholder="Select date range"
+                  value={dateRange}
+                  onChange={(update) => {
+                    if (update) {
+                      const _dateRange: DateRange = [
+                        setToStartOfDate(update[0]),
+                        setToEndOfDate(update[1]),
+                      ];
+                      setDateRange(_dateRange);
+                    }
+                  }}
+                />
+                {isMobile && (
+                  <Button
+                    onClick={() =>
+                      setMobileFiltersOpen(isMobileFiltersOpen ? false : true)
+                    }
+                  >
+                    Filters
+                  </Button>
+                )}
+                {/* <FilterChips /> */}
+              </FiltersRow>
+              <MapOrders
+                orders={orders as CustomOrder[]}
+                clusterize={false}
+                clusterSize={5}
+              />
+            </MapSectionContainer>
+          </MainContainer>
+
+          <OrdersTable
+            orders={orders}
+            rates={rates}
+            targetCurrency={targetCurrency}
+            skuFilters={filters?.SKU}
+          />
+        </HomePageContainer>
+      )}
+      {!user && <LoadingSpinner loading={1} />}
+    </>
   );
 };
 

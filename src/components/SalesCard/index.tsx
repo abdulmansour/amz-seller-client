@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Typography } from '@mui/material';
 import { CustomOrder } from '@pages/index';
 import currency from 'currency.js';
+import { memo } from 'react';
 import {
   CurrencyValue,
   SalesCardContainer,
@@ -98,4 +99,4 @@ const SalesCard = ({ salesCardItems, headerLabel }: SalesCardProps) => {
   );
 };
 
-export default SalesCard;
+export default memo(SalesCard);

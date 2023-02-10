@@ -87,25 +87,22 @@ export const setToEndOfDate = (date: Date) => {
   return d;
 };
 
-export const todayRange = {
-  startDate: setToStartOfDate(new Date()),
-  endDate: new Date(),
-};
+export const todayRange: DateRange = [setToStartOfDate(new Date()), new Date()];
 
-export const yesterdayRange = {
-  startDate: setToStartOfDate(addDays(new Date(), -1)),
-  endDate: setToEndOfDate(addDays(new Date(), -1)),
-};
+export const yesterdayRange: DateRange = [
+  setToStartOfDate(addDays(new Date(), -1)),
+  setToEndOfDate(addDays(new Date(), -1)),
+];
 
-export const last7DaysRange = {
-  startDate: setToStartOfDate(subDays(new Date(), 6)),
-  endDate: new Date(),
-};
+export const last7DaysRange: DateRange = [
+  setToStartOfDate(subDays(new Date(), 6)),
+  new Date(),
+];
 
-export const last30daysRange = {
-  startDate: setToStartOfDate(subDays(new Date(), 29)),
-  endDate: new Date(),
-};
+export const last30daysRange: DateRange = [
+  setToStartOfDate(subDays(new Date(), 29)),
+  new Date(),
+];
 
 export const formatDateLabel = (date: Date) => {
   const formattedDate = date.toLocaleDateString('en-US', {

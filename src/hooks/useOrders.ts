@@ -1,11 +1,13 @@
-import { CustomOrder } from '@pages/index';
+import { FilterOption } from '@components/FilterGroup';
+import {
+  CustomOrder,
+  FilterLabels,
+  martketplaceIdToCountry,
+} from '@pages/index';
 import moment from 'moment';
-import { useEffect, useState } from 'react';
-
-export interface UseOrderProps {
-  startDate?: Date | null;
-  endDate?: Date | null;
-}
+import { useContext, useEffect, useState } from 'react';
+import { DateRange } from 'rsuite/esm/DateRangePicker';
+import { AuthContext } from 'src/contexts/AuthContext';
 
 export enum CeilTo {
   HOUR,
@@ -57,11 +59,21 @@ const getFiles = (sDate: moment.Moment, eDate: moment.Moment) => {
     eDate = moment();
   }
 
-  while (sDate.isBefore(eDate)) {
-    result.push(getFilenameByMoment(sDate));
-    sDate.add(1, 'month');
+  while (true) {
+    if (sDate.isBefore(eDate)) {
+      result.push(getFilenameByMoment(sDate));
+      sDate.add(1, 'month');
+    }
+
+    if (sDate.isAfter(eDate)) {
+      if (sDate.month() === eDate.month()) {
+        if (!result.some((r) => r === getFilenameByMoment(sDate)))
+          result.push(getFilenameByMoment(sDate));
+      }
+      break;
+    }
   }
-  if (eDate.month() > sDate.month()) result.push(getFilenameByMoment(sDate));
+
   return result;
 };
 
@@ -73,7 +85,6 @@ export const getOrdersByDateRange = async (
 
   if (startDate && endDate) {
     const files = getFiles(moment(startDate), moment(endDate));
-
     await Promise.all(
       files.map((file) => fetch(`/api/gcs-json-gz?fileName=${file}`))
     )
@@ -128,8 +139,19 @@ const invalidateCaches = async () => {
   );
 };
 
-export const useOrders = ({ startDate, endDate }: UseOrderProps) => {
-  const [orders, setOrders] = useState<CustomOrder[]>();
+export interface OrdersData {
+  orders: CustomOrder[] | undefined;
+  filters?: Record<FilterLabels, Record<string, FilterOption> | undefined>;
+}
+
+export const useOrders = (dateRange: DateRange) => {
+  const { user } = useContext(AuthContext);
+  const [startDate, endDate] = [dateRange?.[0], dateRange?.[1]];
+
+  const [data, setData] = useState<OrdersData>({
+    orders: [],
+    filters: undefined,
+  });
 
   const fetchOrders = async (
     startDate: Date | null | undefined,
@@ -141,13 +163,16 @@ export const useOrders = ({ startDate, endDate }: UseOrderProps) => {
     );
 
     if (startDate && endDate && orders) {
+      const mStartDate = moment(startDate);
+      const mEndDate = moment(endDate);
       const filteredOrders: CustomOrder[] = Object.keys(orders).reduce(
         (acc, orderId) => {
           const order = orders[orderId];
           if (order?.PurchaseDate) {
             const purchaseDate = new Date(order.PurchaseDate);
-            if (purchaseDate >= startDate && purchaseDate <= endDate)
+            if (moment(purchaseDate).isBetween(mStartDate, mEndDate)) {
               acc.push(order);
+            }
           }
           return acc;
         },
@@ -162,13 +187,79 @@ export const useOrders = ({ startDate, endDate }: UseOrderProps) => {
     const getOrders = async () => {
       await invalidateCaches();
       const filteredOrders = await fetchOrders(startDate, endDate);
-      setOrders(filteredOrders);
+
+      const _marketplaceMap: Record<string, FilterOption> = {};
+      filteredOrders?.forEach((order) => {
+        if (order.MarketplaceId) {
+          if (!(order.MarketplaceId in _marketplaceMap)) {
+            _marketplaceMap[order.MarketplaceId] = {
+              label: martketplaceIdToCountry(order.MarketplaceId) || 'None',
+              value: order.MarketplaceId,
+              selected: false,
+              count: 1,
+            };
+          } else {
+            _marketplaceMap[order.MarketplaceId] = {
+              ..._marketplaceMap[order.MarketplaceId],
+              count: (_marketplaceMap[order.MarketplaceId].count as number) + 1,
+            };
+          }
+        }
+      });
+
+      const _statusMap: Record<string, FilterOption> = {};
+      filteredOrders?.forEach((order) => {
+        if (order.OrderStatus) {
+          if (!(order.OrderStatus in _statusMap)) {
+            _statusMap[order.OrderStatus] = {
+              label: order.OrderStatus,
+              value: order.OrderStatus,
+              selected: false,
+              count: 1,
+            };
+          } else {
+            _statusMap[order.OrderStatus] = {
+              ..._statusMap[order.OrderStatus],
+              count: (_statusMap[order.OrderStatus].count as number) + 1,
+            };
+          }
+        }
+      });
+
+      const _skuMap: Record<string, FilterOption> = {};
+      filteredOrders?.forEach((order) => {
+        if (order.OrderItems) {
+          order.OrderItems.forEach((item) => {
+            if (item.SellerSKU) {
+              if (!(item.SellerSKU in _skuMap)) {
+                _skuMap[item.SellerSKU] = {
+                  label: item.SellerSKU,
+                  value: item.SellerSKU,
+                  selected: false,
+                  count: 1,
+                };
+              } else {
+                _skuMap[item.SellerSKU] = {
+                  ..._skuMap[item.SellerSKU],
+                  count: (_skuMap[item.SellerSKU].count as number) + 1,
+                };
+              }
+            }
+          });
+        }
+      });
+
+      const _filters = {
+        [FilterLabels.MARKETPLACE]: _marketplaceMap,
+        [FilterLabels.ORDER_STATUS]: _statusMap,
+        [FilterLabels.SKU]: _skuMap,
+      };
+
+      setData({ orders: filteredOrders, filters: _filters });
     };
 
-    getOrders();
-  }, [startDate, endDate]);
+    if (user) getOrders();
+  }, [startDate, endDate, user]);
 
-  return {
-    orders: orders,
-  };
+  return data;
 };

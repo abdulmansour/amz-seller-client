@@ -1,11 +1,13 @@
 import { Currency } from '@components/SalesCard';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { AuthContext } from 'src/contexts/AuthContext';
 
 export const useForex = (
   baseRateCurrency: Currency,
   currencies: Currency[]
 ) => {
   const [rates, setRates] = useState<Record<Currency, number>>();
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const getRates = async () => {
@@ -17,8 +19,8 @@ export const useForex = (
           setRates(_rates);
         });
     };
-    getRates();
-  }, []);
+    if (user) getRates();
+  }, [user]);
 
   return { rates };
 };
