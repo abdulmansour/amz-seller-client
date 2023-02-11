@@ -77,6 +77,8 @@ const MapOrders = ({
         // eslint-disable-next-line no-console
         console.log(order);
       }
+      if (selectedOrder?.AmazonOrderId !== order.AmazonOrderId)
+        setSelectedOrder(order);
     },
     [map]
   );
