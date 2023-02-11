@@ -88,18 +88,26 @@ const HomePage = () => {
     setToStartOfDate(subDays(new Date(), 6)),
     new Date(),
   ]);
-  const { orders: initialOrders, filters: initialFilters } =
-    useOrders(dateRange);
+  const {
+    orders: initialOrders,
+    filters: initialFilters,
+    loading: initalLoading,
+  } = useOrders(dateRange);
   const [filteredData, setFilteredData] = useState<OrdersData>({
     orders: undefined,
     filters: undefined,
+    loading: false,
   });
 
-  const { orders, filters } = filteredData;
+  const { orders, filters, loading } = filteredData;
 
   useEffect(() => {
-    setFilteredData({ orders: initialOrders, filters: initialFilters });
-  }, [initialOrders, initialFilters]);
+    setFilteredData({
+      orders: initialOrders,
+      filters: initialFilters,
+      loading: initalLoading,
+    });
+  }, [initialOrders, initialFilters, initalLoading]);
 
   // when filter is selected: update filters with updated selection/counts
   const handleFilterChange = (
@@ -160,6 +168,7 @@ const HomePage = () => {
         }
       });
       setFilteredData({
+        ...filteredData,
         orders: _orders,
         filters: computeFiltersCount(_filters),
       });
@@ -353,7 +362,7 @@ const HomePage = () => {
           />
         </HomePageContainer>
       )}
-      {!user && <LoadingSpinner loading={1} />}
+      {(!user || loading) && <LoadingSpinner loading={1} />}
     </>
   );
 };

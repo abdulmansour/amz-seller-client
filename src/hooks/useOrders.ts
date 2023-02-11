@@ -142,6 +142,7 @@ const invalidateCaches = async () => {
 export interface OrdersData {
   orders: CustomOrder[] | undefined;
   filters?: Record<FilterLabels, Record<string, FilterOption> | undefined>;
+  loading: boolean;
 }
 
 export const useOrders = (dateRange: DateRange) => {
@@ -151,6 +152,7 @@ export const useOrders = (dateRange: DateRange) => {
   const [data, setData] = useState<OrdersData>({
     orders: [],
     filters: undefined,
+    loading: false,
   });
 
   const fetchOrders = async (
@@ -185,6 +187,7 @@ export const useOrders = (dateRange: DateRange) => {
 
   useEffect(() => {
     const getOrders = async () => {
+      setData({ ...data, loading: true });
       await invalidateCaches();
       const filteredOrders = await fetchOrders(startDate, endDate);
 
@@ -255,7 +258,7 @@ export const useOrders = (dateRange: DateRange) => {
         [FilterLabels.SKU]: _skuMap,
       };
 
-      setData({ orders: filteredOrders, filters: _filters });
+      setData({ orders: filteredOrders, filters: _filters, loading: false });
     };
 
     if (user) getOrders();
