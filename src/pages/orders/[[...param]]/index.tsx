@@ -1,5 +1,6 @@
 import { LoadingSpinner } from '@components/LoadingSpinner';
 import AuthenticatedPage from '@layout/AuthenticatedPage';
+import { ErrorMessage } from '@layout/Global/styled';
 import { Typography } from '@mui/material';
 import { CustomOrder } from '@pages/index';
 import { GetStaticPaths, GetStaticProps } from 'next';
@@ -14,30 +15,31 @@ export interface OrderPageProps {
 
 const OrderPage = ({ orderId }: OrderPageProps) => {
   const [order, setOrder] = useState<CustomOrder | undefined>(undefined);
-  const isBrowser = typeof window !== 'undefined';
+  const [error, setError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const getOrder = async () => {
-      const order = await fetch(`/api/sp-api?orderId=${orderId}`).then(
-        (res) => {
-          return res.json();
-        }
-      );
-
-      setOrder(order);
+      await fetch(`/api/sp-api?orderId=${orderId}`)
+        .then((res) => {
+          if (res.ok) return res.json();
+          throw new Error(
+            `${orderId} is not valid. Please check your orderId and try again.`
+          );
+        })
+        .then((orderPayload) => setOrder(orderPayload))
+        .catch((e: Error) => {
+          setError(e.message);
+        });
     };
     if (orderId) getOrder();
   }, [orderId]);
 
   return (
     <AuthenticatedPage>
-      {order && isBrowser && (
-        <div>
-          <Typography sx={{ fontSize: 36 }}>{order.AmazonOrderId}</Typography>
-          <DynamicReactJson src={order} />
-        </div>
-      )}
-      {!order && <LoadingSpinner loading={1} />}
+      <Typography sx={{ fontSize: 36 }}>{orderId}</Typography>
+      {order && <DynamicReactJson src={order} />}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {!order && !error && <LoadingSpinner loading={1} />}
     </AuthenticatedPage>
   );
 };

@@ -1,11 +1,8 @@
+import { ErrorMessage } from '@layout/Global/styled';
 import { Button, TextField } from '@mui/material';
 import { useContext, useState } from 'react';
 import { AuthContext } from 'src/contexts/AuthContext';
-import {
-  AuthFormBody,
-  AuthFormContainer,
-  AuthFormErrorMessage,
-} from './styled';
+import { AuthFormBody, AuthFormContainer } from './styled';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface AuthFormProps {}
@@ -38,7 +35,7 @@ const AuthForm = ({}: AuthFormProps) => {
           Sign In
         </Button>
       </AuthFormBody>
-      <AuthFormErrorMessage>{errorMessage}</AuthFormErrorMessage>
+      <ErrorMessage>{errorMessage}</ErrorMessage>
     </AuthFormContainer>
   );
 };

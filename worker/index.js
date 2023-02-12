@@ -36,7 +36,20 @@ registerRoute(
     cacheName: 'forex',
     plugins: [
       new ExpirationPlugin({
-        maxAgeSeconds: 8 * 60 * 60,
+        maxAgeSeconds: 24 * 60 * 60,
+      }),
+    ],
+  }),
+  'GET'
+);
+
+registerRoute(
+  /\/api\/sp-api.*$/i,
+  new CacheFirst({
+    cacheName: 'sp-api',
+    plugins: [
+      new ExpirationPlugin({
+        maxAgeSeconds: 5 * 60,
       }),
     ],
   }),
