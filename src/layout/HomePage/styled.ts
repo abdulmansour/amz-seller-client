@@ -1,13 +1,6 @@
 import { Backdrop, Box, Paper } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
-export const HomePageContainer = styled(Box)`
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  gap: 20px;
-`;
-
 export const MainContainer = styled(Paper)`
   display: flex;
   flex-direction: row;

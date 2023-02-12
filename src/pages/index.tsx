@@ -9,16 +9,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useForex } from '@hooks/useForex';
 import { useGreedyPollOrders } from '@hooks/useGreedyPollOrders';
 import { OrdersData, useOrders } from '@hooks/useOrders';
+import AuthenticatedPage from '@layout/AuthenticatedPage';
 import {
   FiltersContainer,
   FiltersRow,
-  HomePageContainer,
   MainContainer,
   MapSectionContainer,
   MobileFiltersContainer,
   MobileFiltersXContainer,
 } from '@layout/HomePage/styled';
-import Navbar from '@layout/NavBar';
 import {
   Button,
   IconButton,
@@ -34,11 +33,10 @@ import {
   setToStartOfDate,
   subDays,
 } from '@utils/dateRanges';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DateRangePicker } from 'rsuite';
 import 'rsuite/dist/rsuite.min.css';
 import { DateRange } from 'rsuite/esm/DateRangePicker';
-import { AuthContext } from 'src/contexts/AuthContext';
 
 export interface CustomOrder extends Order {
   ShippingAddressGeoLocation?: {
@@ -81,8 +79,6 @@ const HomePage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isMobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
-
-  const { user } = useContext(AuthContext);
 
   const [dateRange, setDateRange] = useState<DateRange>([
     setToStartOfDate(subDays(new Date(), 6)),
@@ -247,123 +243,118 @@ const HomePage = () => {
   useGreedyPollOrders();
 
   return (
-    <>
-      {user && (
-        <HomePageContainer>
-          <Navbar />
-          <SalesCards
-            orders={orders}
-            dateRange={dateRange}
-            rates={rates}
-            targetCurrency={targetCurrency}
-            skuFilters={filters?.SKU}
-          />
-          <MainContainer elevation={3}>
-            {!isMobile && (
-              <FiltersContainer>
-                {filters &&
-                  Object.keys(filters).map((key) => {
-                    return (
-                      <FilterGroup
-                        key={key}
-                        filterLabel={key}
-                        filterOptions={
-                          filters[key as FilterLabels] as Record<
-                            string,
-                            FilterOption
-                          >
-                        }
-                        handleFilterChange={handleFilterChange}
-                      />
-                    );
-                  })}
-              </FiltersContainer>
-            )}
-            {isMobile && (
-              <MobileFiltersContainer open={isMobileFiltersOpen}>
-                <FiltersContainer>
-                  <MobileFiltersXContainer>
-                    <Typography sx={{ fontWeight: 600, fontSize: '18px' }}>
-                      Filters
-                    </Typography>
-                    <IconButton
-                      onClick={() =>
-                        setMobileFiltersOpen(isMobileFiltersOpen ? false : true)
+    <AuthenticatedPage>
+      <SalesCards
+        orders={orders}
+        dateRange={dateRange}
+        rates={rates}
+        targetCurrency={targetCurrency}
+        skuFilters={filters?.SKU}
+      />
+      <MainContainer elevation={3}>
+        {!isMobile && (
+          <FiltersContainer>
+            {filters &&
+              Object.keys(filters).map((key) => {
+                return (
+                  <FilterGroup
+                    key={key}
+                    filterLabel={key}
+                    filterOptions={
+                      filters[key as FilterLabels] as Record<
+                        string,
+                        FilterOption
+                      >
+                    }
+                    handleFilterChange={handleFilterChange}
+                  />
+                );
+              })}
+          </FiltersContainer>
+        )}
+        {isMobile && (
+          <MobileFiltersContainer open={isMobileFiltersOpen}>
+            <FiltersContainer>
+              <MobileFiltersXContainer>
+                <Typography sx={{ fontWeight: 600, fontSize: '18px' }}>
+                  Filters
+                </Typography>
+                <IconButton
+                  onClick={() =>
+                    setMobileFiltersOpen(isMobileFiltersOpen ? false : true)
+                  }
+                >
+                  <FontAwesomeIcon icon={faXmark} />
+                </IconButton>
+              </MobileFiltersXContainer>
+              {filters &&
+                Object.keys(filters).map((key) => {
+                  return (
+                    <FilterGroup
+                      key={key}
+                      filterLabel={key}
+                      filterOptions={
+                        filters[key as FilterLabels] as Record<
+                          string,
+                          FilterOption
+                        >
                       }
-                    >
-                      <FontAwesomeIcon icon={faXmark} />
-                    </IconButton>
-                  </MobileFiltersXContainer>
-                  {filters &&
-                    Object.keys(filters).map((key) => {
-                      return (
-                        <FilterGroup
-                          key={key}
-                          filterLabel={key}
-                          filterOptions={
-                            filters[key as FilterLabels] as Record<
-                              string,
-                              FilterOption
-                            >
-                          }
-                          handleFilterChange={handleFilterChange}
-                        />
-                      );
-                    })}
-                </FiltersContainer>
-              </MobileFiltersContainer>
+                      handleFilterChange={handleFilterChange}
+                    />
+                  );
+                })}
+            </FiltersContainer>
+          </MobileFiltersContainer>
+        )}
+        <MapSectionContainer>
+          <FiltersRow>
+            <DateRangePicker
+              renderValue={([startDate, endDate]) => {
+                return `${formatDateLabel(startDate)} - ${formatDateLabel(
+                  endDate
+                )}`;
+              }}
+              showOneCalendar
+              ranges={predefinedRanges}
+              placeholder="Select date range"
+              value={dateRange}
+              onChange={(update) => {
+                if (update) {
+                  const _dateRange: DateRange = [
+                    setToStartOfDate(update[0]),
+                    setToEndOfDate(update[1]),
+                  ];
+                  setDateRange(_dateRange);
+                }
+              }}
+            />
+            {isMobile && (
+              <Button
+                onClick={() =>
+                  setMobileFiltersOpen(isMobileFiltersOpen ? false : true)
+                }
+              >
+                Filters
+              </Button>
             )}
-            <MapSectionContainer>
-              <FiltersRow>
-                <DateRangePicker
-                  renderValue={([startDate, endDate]) => {
-                    return `${formatDateLabel(startDate)} - ${formatDateLabel(
-                      endDate
-                    )}`;
-                  }}
-                  showOneCalendar
-                  ranges={predefinedRanges}
-                  placeholder="Select date range"
-                  value={dateRange}
-                  onChange={(update) => {
-                    if (update) {
-                      const _dateRange: DateRange = [
-                        setToStartOfDate(update[0]),
-                        setToEndOfDate(update[1]),
-                      ];
-                      setDateRange(_dateRange);
-                    }
-                  }}
-                />
-                {isMobile && (
-                  <Button
-                    onClick={() =>
-                      setMobileFiltersOpen(isMobileFiltersOpen ? false : true)
-                    }
-                  >
-                    Filters
-                  </Button>
-                )}
-                {/* <FilterChips /> */}
-              </FiltersRow>
-              <MapOrders
-                orders={orders as CustomOrder[]}
-                clusterize={false}
-                clusterSize={5}
-              />
-            </MapSectionContainer>
-          </MainContainer>
-
-          <OrdersTable
-            orders={orders}
-            rates={rates}
-            targetCurrency={targetCurrency}
-            skuFilters={filters?.SKU}
+            {/* <FilterChips /> */}
+          </FiltersRow>
+          <MapOrders
+            orders={orders as CustomOrder[]}
+            clusterize={false}
+            clusterSize={5}
           />
-        </HomePageContainer>
-      )}
-      {(!user || loading) && <LoadingSpinner loading={1} />}
-    </>
+        </MapSectionContainer>
+      </MainContainer>
+
+      <OrdersTable
+        orders={orders}
+        rates={rates}
+        targetCurrency={targetCurrency}
+        skuFilters={filters?.SKU}
+      />
+      {loading && <LoadingSpinner loading={1} />}
+    </AuthenticatedPage>
   );
 };
 

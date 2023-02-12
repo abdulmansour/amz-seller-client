@@ -1,4 +1,4 @@
-import { Box, Paper, styled, Typography } from '@mui/material';
+import { Box, Paper, styled } from '@mui/material';
 
 export const AuthFormContainer = styled(Box)(({}) => ({
   display: 'flex',
@@ -18,8 +18,4 @@ export const AuthFormBody = styled(Paper)(({}) => ({
   alignItems: 'center',
   width: 'fit-content',
   height: 'fit-content',
-}));
-
-export const AuthFormErrorMessage = styled(Typography)(({ theme }) => ({
-  color: theme.palette.error.main,
 }));

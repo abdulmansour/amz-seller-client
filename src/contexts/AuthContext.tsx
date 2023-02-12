@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     if (_user) {
       if (!user) setUser(_user);
       if (typeof window !== 'undefined') {
-        if (router.asPath !== '/') router.push('/');
+        if (router.asPath === '/login') router.push('/');
       }
     } else {
       if (user) setUser(undefined);
