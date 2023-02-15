@@ -26,7 +26,7 @@ const downloadFile = async (
 };
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  const bucketName = process.env.GCS_BUCKET_NAME as string;
+  const bucketName = (req?.query?.bucketName as string).toLowerCase();
   const fileName = req?.query?.fileName as string;
   const storage = new Storage({
     projectId: process.env.GCS_PROJECT_ID,

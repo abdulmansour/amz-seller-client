@@ -4,6 +4,7 @@ import {
   FilterLabels,
   martketplaceIdToCountry,
 } from '@pages/index';
+import { User } from 'firebase/auth';
 import moment from 'moment';
 import { useContext, useEffect, useState } from 'react';
 import { DateRange } from 'rsuite/esm/DateRangePicker';
@@ -79,14 +80,17 @@ const getFiles = (sDate: moment.Moment, eDate: moment.Moment) => {
 
 export const getOrdersByDateRange = async (
   startDate: Date | undefined | null,
-  endDate: Date | undefined | null
+  endDate: Date | undefined | null,
+  user: User | undefined
 ) => {
   let orders = {};
 
   if (startDate && endDate) {
     const files = getFiles(moment(startDate), moment(endDate));
     await Promise.all(
-      files.map((file) => fetch(`/api/gcs-json-gz?fileName=${file}`))
+      files.map((file) =>
+        fetch(`/api/gcs-json-gz?fileName=${file}&bucketName=${user?.uid || ''}`)
+      )
     )
       .then((responses) => Promise.all(responses.map((res) => res.json())))
       .then((_ordersList: Record<string, CustomOrder>[]) => {
@@ -124,18 +128,22 @@ export const invalidateCache = async (
   }
 };
 
-const invalidateCaches = async () => {
+const invalidateCaches = async (user: User | undefined) => {
   await invalidateCache(
     getFilenameByMoment(moment()),
     CeilTo.HOUR,
     'gcs-json-gz',
-    `/api/gcs-json-gz?fileName=${getFilenameByMoment(moment())}`
+    `/api/gcs-json-gz?fileName=${getFilenameByMoment(moment())}&bucketName=${
+      user?.uid || ''
+    }`
   );
   await invalidateCache(
     getFilenameByMoment(moment(), 1),
     CeilTo.HOUR,
     'gcs-json-gz',
-    `/api/gcs-json-gz?fileName=${getFilenameByMoment(moment(), 1)}`
+    `/api/gcs-json-gz?fileName=${getFilenameByMoment(moment(), 1)}&bucketName=${
+      user?.uid || ''
+    }`
   );
 };
 
@@ -161,7 +169,8 @@ export const useOrders = (dateRange: DateRange) => {
   ) => {
     const orders: Record<string, CustomOrder> = await getOrdersByDateRange(
       startDate,
-      endDate
+      endDate,
+      user
     );
 
     if (startDate && endDate && orders) {
@@ -188,7 +197,7 @@ export const useOrders = (dateRange: DateRange) => {
   useEffect(() => {
     const getOrders = async () => {
       setData({ ...data, loading: true });
-      await invalidateCaches();
+      await invalidateCaches(user);
       const filteredOrders = await fetchOrders(startDate, endDate);
 
       const _marketplaceMap: Record<string, FilterOption> = {};
