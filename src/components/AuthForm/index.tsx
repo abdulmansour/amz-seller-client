@@ -13,6 +13,10 @@ const AuthForm = ({}: AuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.code === 'Enter') handleSignIn && handleSignIn(email, password);
+  };
+
   return (
     <AuthFormContainer>
       <AuthFormBody>
@@ -22,6 +26,7 @@ const AuthForm = ({}: AuthFormProps) => {
           margin="dense"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
         <TextField
           label="Password"
@@ -30,6 +35,7 @@ const AuthForm = ({}: AuthFormProps) => {
           margin="dense"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
         <Button onClick={() => handleSignIn && handleSignIn(email, password)}>
           Sign In

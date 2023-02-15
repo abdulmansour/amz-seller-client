@@ -22,7 +22,8 @@ export const useGreedyPollOrders = () => {
                 new Date(
                   process.env.NEXT_PUBLIC_GREEDY_POLL_START_DATE as string
                 ),
-                new Date()
+                new Date(),
+                user
               );
               localStorage.setItem('greedyPollCompleted', 'true');
             };
