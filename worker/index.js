@@ -5,15 +5,22 @@ import { CacheFirst } from 'workbox-strategies';
 self.__WB_DISABLE_DEV_LOGS = true;
 
 registerRoute(
-  /\/api\/gcs-json-gz.*$/i,
+  /\/api\/gcs-json-gz.*isMobile=true.*$/i,
   new CacheFirst({
     cacheName: 'gcs-json-gz',
     plugins: [
       new ExpirationPlugin({
-        maxEntries: 1000,
-        maxAgeSeconds: 5 * 60,
+        maxAgeSeconds: 15 * 60,
       }),
     ],
+  }),
+  'GET'
+);
+
+registerRoute(
+  /\/api\/gcs-json-gz.*isMobile=false.*$/i,
+  new CacheFirst({
+    cacheName: 'gcs-json-gz',
   }),
   'GET'
 );
@@ -22,11 +29,6 @@ registerRoute(
   /\/api\/firestore-orders.*$/i,
   new CacheFirst({
     cacheName: 'firestore-orders',
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries: 10,
-      }),
-    ],
   }),
   'GET'
 );
