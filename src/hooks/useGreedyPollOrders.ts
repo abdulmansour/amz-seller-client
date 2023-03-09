@@ -1,11 +1,12 @@
 import { useContext } from 'react';
+import { isMobile } from 'react-device-detect';
 import { AuthContext } from 'src/contexts/AuthContext';
 import { getOrdersByDateRange } from './useOrders';
 
 export const useGreedyPollOrders = () => {
   const { user } = useContext(AuthContext);
 
-  if (user) {
+  if (user && !isMobile) {
     const forceGreedyPoll = process.env.NEXT_PUBLIC_GREEDY_POLL_FORCE as string;
     const greedyPollCompleted = localStorage.getItem('greedyPollCompleted');
 
