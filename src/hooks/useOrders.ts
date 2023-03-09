@@ -7,6 +7,7 @@ import {
 import { User } from 'firebase/auth';
 import moment from 'moment';
 import { useContext, useEffect, useState } from 'react';
+import { isMobile } from 'react-device-detect';
 import { DateRange } from 'rsuite/esm/DateRangePicker';
 import { AuthContext } from 'src/contexts/AuthContext';
 
@@ -89,7 +90,11 @@ export const getOrdersByDateRange = async (
     const files = getFiles(moment(startDate), moment(endDate));
     await Promise.all(
       files.map((file) =>
-        fetch(`/api/gcs-json-gz?fileName=${file}&bucketName=${user?.uid || ''}`)
+        fetch(
+          `/api/gcs-json-gz?isMobile=${isMobile}&fileName=${file}&bucketName=${
+            user?.uid || ''
+          }`
+        )
       )
     )
       .then((responses) => Promise.all(responses.map((res) => res.json())))
@@ -133,17 +138,18 @@ const invalidateCaches = async (user: User | undefined) => {
     getFilenameByMoment(moment()),
     CeilTo.HOUR,
     'gcs-json-gz',
-    `/api/gcs-json-gz?fileName=${getFilenameByMoment(moment())}&bucketName=${
-      user?.uid || ''
-    }`
+    `/api/gcs-json-gz?isMobile=${isMobile}&fileName=${getFilenameByMoment(
+      moment()
+    )}&bucketName=${user?.uid || ''}`
   );
   await invalidateCache(
     getFilenameByMoment(moment(), 1),
     CeilTo.HOUR,
     'gcs-json-gz',
-    `/api/gcs-json-gz?fileName=${getFilenameByMoment(moment(), 1)}&bucketName=${
-      user?.uid || ''
-    }`
+    `/api/gcs-json-gz?isMobile=${isMobile}&fileName=${getFilenameByMoment(
+      moment(),
+      1
+    )}&bucketName=${user?.uid || ''}`
   );
 };
 
